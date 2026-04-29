@@ -1,6 +1,9 @@
 # C2A LAP
 
 Sales management dashboard and customer storefront for **C2A LAP**.
+## 🧠 System Architecture
+
+![Architecture](./docs/architecture.png)
 
 The project keeps one shared data source for:
 - admin users
