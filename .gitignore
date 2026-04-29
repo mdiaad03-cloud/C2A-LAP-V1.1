@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+server/node_modules/
+client/node_modules/
+
+# Environment files
+.env
+server/.env
+
+# Build output
+client/dist/
+
+# Runtime data
+server/uploads/
+server/temp/
+server/exports/
+server/src/data/db.json

@@ -1,0 +1,18 @@
+{
+  "name": "c2a-lap",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sales management dashboard and storefront for C2A LAP.",
+  "author": "Mohamed diaa - 2024030095 - Badr University - Section Z1",
+  "license": "UNLICENSED",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev": "npm run build && npm --prefix server run dev",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server run start",
+    "windows:dev": "cmd /c run-app.bat",
+    "windows:build": "cmd /c build-client.bat",
+    "windows:start": "cmd /c run-server.bat"
+  },
+  "devDependencies": {}
+}

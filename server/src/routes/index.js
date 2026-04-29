@@ -1,0 +1,40 @@
+import { Router } from "express";
+import authRoutes from "./authRoutes.js";
+import customerAuthRoutes from "./customerAuthRoutes.js";
+import userRoutes from "./userRoutes.js";
+import salesRoutes from "./salesRoutes.js";
+import contactRoutes from "./contactRoutes.js";
+import productRoutes from "./productRoutes.js";
+import shippingRoutes from "./shippingRoutes.js";
+import dashboardRoutes from "./dashboardRoutes.js";
+import profitRoutes from "./profitRoutes.js";
+import reportRoutes from "./reportRoutes.js";
+import logRoutes from "./logRoutes.js";
+import systemRoutes from "./systemRoutes.js";
+import storeRoutes from "./storeRoutes.js";
+import onlineOrderRoutes from "./onlineOrderRoutes.js";
+import supportRoutes from "./supportRoutes.js";
+import storeSettingsRoutes from "./storeSettingsRoutes.js";
+import agentRoutes from "./agentRoutes.js";
+
+const router = Router();
+
+router.use("/auth", authRoutes);
+router.use("/customer-auth", customerAuthRoutes);
+router.use("/users", userRoutes);
+router.use("/sales", salesRoutes);
+router.use("/contacts", contactRoutes);
+router.use("/products", productRoutes);
+router.use("/shipping", shippingRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/profits", profitRoutes);
+router.use("/reports", reportRoutes);
+router.use("/logs", logRoutes);
+router.use("/system", systemRoutes);
+router.use("/store", storeRoutes);
+router.use("/online-orders", onlineOrderRoutes);
+router.use("/support", supportRoutes);
+router.use("/store-settings", storeSettingsRoutes);
+router.use("/agent", agentRoutes);
+
+export default router;
