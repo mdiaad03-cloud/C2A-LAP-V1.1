@@ -400,9 +400,23 @@ function getInitials(name) {
 }
 
 function StoreAvatar({ name, avatarUrl, className = "store-avatar" }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [avatarUrl]);
+
   return (
     <span className={className} aria-hidden="true">
-      {avatarUrl ? <img src={avatarUrl} alt={name || "Account avatar"} /> : <span>{getInitials(name)}</span>}
+      {avatarUrl && !hasError ? (
+        <img
+          src={avatarUrl}
+          alt={name || "Account avatar"}
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <span>{getInitials(name)}</span>
+      )}
     </span>
   );
 }
