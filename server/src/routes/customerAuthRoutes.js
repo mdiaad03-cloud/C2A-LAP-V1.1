@@ -415,7 +415,9 @@ router.get(
     });
 
     if (!tokenResponse.ok) {
-      return res.status(400).send("Google token exchange failed.");
+      const errText = await tokenResponse.text();
+      console.error("Google token exchange failed. Status:", tokenResponse.status, "Body:", errText);
+      return res.status(400).send(`Google token exchange failed. Status: ${tokenResponse.status}, Error Details: ${errText}`);
     }
 
     const tokenData = await tokenResponse.json();
