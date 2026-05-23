@@ -281,6 +281,35 @@ router.get(
   authorize("admin"),
   asyncHandler(async (req, res) => {
     const health = await getBostaHealth();
+    const db = await getDb();
+    
+    const bostaOrders = db.onlineOrders.filter(
+      (order) => String(order.shippingCompanyName || "").toLowerCase() === "bosta" || order.trackingNumber
+    );
+
+    const stats = {
+      total: bostaOrders.length,
+      pendingPickup: bostaOrders.filter(o => ["pickup_requested", "created", "pickup-requested", "new"].includes(String(o.shippingStatus || "").toLowerCase())).length,
+      inTransit: bostaOrders.filter(o => ["picked_up", "picked-up", "in_transit", "in-transit", "out_for_delivery", "out-for-delivery"].includes(String(o.shippingStatus || "").toLowerCase())).length,
+      delivered: bostaOrders.filter(o => ["delivered", "delivered_to_customer", "delivered-to-customer", "received"].includes(String(o.shippingStatus || "").toLowerCase())).length,
+      cancelled: bostaOrders.filter(o => ["cancelled", "canceled", "returned", "returned_to_business", "return_to_origin"].includes(String(o.shippingStatus || "").toLowerCase())).length,
+    };
+
+    const orders = bostaOrders.map(o => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      customerName: o.customerName,
+      customerPhone: o.customerPhone,
+      total: o.total,
+      trackingNumber: o.trackingNumber,
+      shippingStatus: o.shippingStatus,
+      status: o.status,
+      createdAt: o.createdAt,
+    }));
+
+    health.stats = stats;
+    health.orders = orders;
+
     res.json(buildSuccess("Bosta provider health loaded successfully.", { provider: "bosta", health }));
   }),
 );

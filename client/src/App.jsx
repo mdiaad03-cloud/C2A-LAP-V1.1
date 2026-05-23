@@ -452,6 +452,12 @@ export default function App() {
     return response.data?.health || null;
   }
 
+  async function syncBostaStatus(orderId) {
+    const response = await api.post(`/shipping/providers/bosta/orders/${orderId}/sync-status`);
+    await refreshAll();
+    return response.data;
+  }
+
   async function createBostaShipment(orderId, payload = {}) {
     const response = await api.post(`/shipping/providers/bosta/orders/${orderId}/create-shipment`, payload);
     await refreshAll();
@@ -681,6 +687,7 @@ export default function App() {
                 shippingCompanies={shippingCompanies}
                 onCreateShipping={createShipping}
                 onRefreshBostaHealth={getBostaHealth}
+                onSyncBostaStatus={syncBostaStatus}
                 lang={lang}
               />
             ) : null}

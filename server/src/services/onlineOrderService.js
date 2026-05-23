@@ -242,6 +242,20 @@ export function buildOrderPayload({ db, items, customer, paymentMethod, discount
         error.status = 400;
         throw error;
       }
+
+      if (coupon.isFirstOrderOnly) {
+        const email = String(customer?.email || "").trim().toLowerCase();
+        const hasOrdered = db.onlineOrders.some(
+          (order) =>
+            String(order.customerEmail || "").trim().toLowerCase() === email &&
+            order.status !== "cancelled"
+        );
+        if (hasOrdered) {
+          const error = new Error("This coupon is only valid for your first order.");
+          error.status = 400;
+          throw error;
+        }
+      }
       
       if (coupon.type === "percent") {
         discountAmount = toMoney(subtotal * (coupon.value / 100));

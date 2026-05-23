@@ -1311,11 +1311,24 @@ function StoreSocialButtons({ socialLinks, tr, compact = false }) {
   );
 }
 
+function StorePromoBanner() {
+  const { tr } = useStore();
+  return (
+    <div className="store-promo-banner">
+      <div className="store-promo-banner-content">
+        ✨ {tr("Get 200 EGP discount on your first order! Use code:", "احصل على خصم 200 جنيه على أول طلب لك! استخدم كود:")}{" "}
+        <strong className="promo-code">FIRST200</strong> ✨
+      </div>
+    </div>
+  );
+}
+
 function StoreLayout() {
   const { tr, meta } = useStore();
   return (
     <>
       <StoreScrollManager />
+      <StorePromoBanner />
       <StoreHeader />
       <main className="store-main">
         <Outlet />
@@ -2637,57 +2650,141 @@ function StoreCheckoutPage() {
     saveCheckoutDraft,
     checkoutDraft,
     customerUser,
+    updateCustomerProfile,
+    isCustomerAuthenticated,
     formatPrice,
     tr,
     currency,
     setCurrency,
     isArabic,
     discountCode,
-    setDiscountCode,
     discountAmount,
   } = useStore();
-  const [promoInput, setPromoInput] = useState(discountCode);
+
   const [form, setForm] = useState({
-    country: "",
-    address: "",
-    city: "",
-    notes: "",
+    notes: checkoutDraft?.customer?.notes || "",
     paymentMethod: checkoutDraft?.paymentMethod || "cash_on_delivery",
   });
 
+  const [customerInfo, setCustomerInfo] = useState({
+    name: customerUser?.name || "",
+    email: customerUser?.email || "",
+    phone: customerUser?.phone || "",
+  });
+
   useEffect(() => {
-    setForm((prev) => ({
-      country:
-        checkoutDraft?.customer?.country
-        || customerUser?.country
-        || prev.country
-        || countryFromCurrency(currency),
-      address: checkoutDraft?.customer?.address || customerUser?.address || prev.address,
-      city: checkoutDraft?.customer?.city || customerUser?.city || prev.city,
-      notes: checkoutDraft?.customer?.notes || prev.notes,
-      paymentMethod: checkoutDraft?.paymentMethod || prev.paymentMethod || "cash_on_delivery",
-    }));
-  }, [checkoutDraft, currency, customerUser]);
+    if (customerUser) {
+      setCustomerInfo({
+        name: customerUser.name || "",
+        email: customerUser.email || "",
+        phone: customerUser.phone || "",
+      });
+    }
+  }, [customerUser]);
+
+  const savedAddresses = useMemo(() => {
+    const list = [...(customerUser?.addresses || [])];
+    if (list.length === 0 && customerUser?.address) {
+      list.push({
+        id: "legacy",
+        label: isArabic ? "العنوان الافتراضي" : "Default Address",
+        address: customerUser.address,
+        city: customerUser.city || "",
+        country: customerUser.country || "EG",
+      });
+    }
+    return list;
+  }, [customerUser, isArabic]);
+
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    savedAddresses.length > 0 ? savedAddresses[0].id : "new"
+  );
+
+  useEffect(() => {
+    if (savedAddresses.length > 0) {
+      setSelectedAddressId((prev) => {
+        if (prev === "new") return "new";
+        if (savedAddresses.some((a) => a.id === prev)) return prev;
+        return savedAddresses[0].id;
+      });
+    } else {
+      setSelectedAddressId("new");
+    }
+  }, [savedAddresses]);
+
+  const [newAddress, setNewAddress] = useState({
+    label: "",
+    address: "",
+    city: "",
+    country: countryFromCurrency(currency) || "EG",
+  });
 
   if (cartItems.length === 0) {
     return <Navigate to="/store/cart" replace />;
   }
 
-  if (!customerUser?.name || !customerUser?.email || !customerUser?.phone) {
+  if (!isCustomerAuthenticated) {
     return <Navigate to="/store/account" replace state={{ from: "/store/checkout" }} />;
   }
 
   async function submitCheckout(event) {
     event.preventDefault();
+
+    let orderAddress = null;
+    let nextAddresses = [...(customerUser?.addresses || [])];
+
+    if (selectedAddressId === "new") {
+      if (!newAddress.address.trim() || !newAddress.city.trim()) {
+        toast.error(tr("Please complete the new address fields.", "برجاء استكمال بيانات العنوان الجديد."));
+        return;
+      }
+      const label = newAddress.label.trim() || (isArabic ? `عنوان جديد ${nextAddresses.length + 1}` : `New Address ${nextAddresses.length + 1}`);
+      const newAddrItem = {
+        id: Date.now().toString(),
+        label,
+        address: newAddress.address.trim(),
+        city: newAddress.city.trim(),
+        country: newAddress.country,
+      };
+      nextAddresses.push(newAddrItem);
+      orderAddress = newAddrItem;
+    } else {
+      orderAddress = savedAddresses.find((a) => a.id === selectedAddressId);
+      if (!orderAddress) {
+        toast.error(tr("Selected address is invalid.", "العنوان المختار غير صالح."));
+        return;
+      }
+    }
+
+    if (!customerInfo.name.trim() || !customerInfo.email.trim() || !customerInfo.phone.trim()) {
+      toast.error(tr("Name, email, and phone are required.", "الاسم والبريد الإلكتروني والهاتف مطلوبة."));
+      return;
+    }
+
+    try {
+      await updateCustomerProfile({
+        name: customerInfo.name.trim(),
+        email: customerInfo.email.trim(),
+        phone: customerInfo.phone.trim(),
+        addresses: nextAddresses,
+        address: orderAddress.address,
+        city: orderAddress.city,
+        country: orderAddress.country,
+      });
+    } catch (err) {
+      toast.error(tr("Could not update profile.", "تعذر حفظ بيانات الحساب."));
+      return;
+    }
+
     saveCheckoutDraft({
       paymentMethod: form.paymentMethod || "cash_on_delivery",
       customer: {
-        name: customerUser?.name || "",
-        email: customerUser?.email || "",
-        phone: customerUser?.phone || "",
-        country: form.country,
-        address: form.address,
-        city: form.city,
+        name: customerInfo.name.trim(),
+        email: customerInfo.email.trim(),
+        phone: customerInfo.phone.trim(),
+        country: orderAddress.country,
+        address: orderAddress.address,
+        city: orderAddress.city,
         notes: form.notes,
       },
     });
@@ -2698,124 +2795,186 @@ function StoreCheckoutPage() {
     <div className="store-cart-layout">
       <section className="store-section">
         <div className="store-section-head">
-          <h2>{tr("Checkout", "\u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0637\u0644\u0628")}</h2>
+          <h2>{tr("Checkout", "إتمام الطلب")}</h2>
           <p>
             {tr(
-              "Use your account details. Edit the shipping address here only when needed.",
-              "\u0627\u0633\u062a\u062e\u062f\u0645 \u0628\u064a\u0627\u0646\u0627\u062a \u062d\u0633\u0627\u0628\u0643\u060c \u0648\u0639\u062f\u0644 \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0634\u062d\u0646 \u0647\u0646\u0627 \u0641\u0642\u0637 \u0639\u0646\u062f \u0627\u0644\u062d\u0627\u062c\u0629.",
+              "Review and update your information. Select or add a shipping address below.",
+              "راجع معلوماتك وحددها. اختر عنوان الشحن أو أضف عنوانًا جديدًا أدناه.",
             )}
           </p>
-          <p>{tr("Displayed currency", "\u0627\u0644\u0639\u0645\u0644\u0629 \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629")}: {currency}</p>
         </div>
 
         <form className="store-checkout-form" onSubmit={submitCheckout}>
-          <div className="store-customer-inline span-2">
-            <article>
-              <strong>{customerUser?.name || tr("Customer", "\u0627\u0644\u0639\u0645\u064a\u0644")}</strong>
-              <span>{customerUser?.email || "-"}</span>
-            </article>
-            <article>
-              <strong>{tr("Phone", "\u0627\u0644\u0647\u0627\u062a\u0641")}</strong>
-              <span>
-                {customerUser?.phone || tr("Update it from account page", "\u062d\u062f\u0651\u062b\u0647 \u0645\u0646 \u0635\u0641\u062d\u0629 \u0627\u0644\u062d\u0633\u0627\u0628")}
-              </span>
-            </article>
+          <div className="span-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "10px" }}>
+            <label>
+              {tr("Full Name", "الاسم الكامل")}
+              <input
+                value={customerInfo.name}
+                onChange={(e) => setCustomerInfo((prev) => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </label>
+            <label>
+              {tr("Email Address", "البريد الإلكتروني")}
+              <input
+                type="email"
+                value={customerInfo.email}
+                onChange={(e) => setCustomerInfo((prev) => ({ ...prev, email: e.target.value }))}
+                required
+              />
+            </label>
+            <label className="span-2">
+              {tr("Phone Number", "رقم الهاتف")}
+              <input
+                value={customerInfo.phone}
+                onChange={(e) => setCustomerInfo((prev) => ({ ...prev, phone: e.target.value }))}
+                required
+              />
+            </label>
           </div>
-          <label className="span-2">
-            {tr("Country", "\u0627\u0644\u062f\u0648\u0644\u0629")}
-            <select
-              value={form.country}
-              onChange={(event) => {
-                const nextCountry = event.target.value;
-                setForm((prev) => ({ ...prev, country: nextCountry }));
-                const nextCurrency = currencyForCountry(nextCountry);
-                if (nextCurrency) {
-                  setCurrency(nextCurrency);
-                }
-              }}
-              required
-            >
-              <option value="">{tr("Select country", "\u0627\u062e\u062a\u0631 \u0627\u0644\u062f\u0648\u0644\u0629")}</option>
-              {COUNTRY_OPTIONS.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {tr(country.nameEn, country.nameAr)} - {country.currency}
-                </option>
+
+          <div className="span-2" style={{ marginTop: "15px" }}>
+            <h4 style={{ marginBottom: "10px" }}>{tr("Select Shipping Address", "اختر عنوان الشحن")}</h4>
+            <div className="address-cards-grid">
+              {savedAddresses.map((addr) => (
+                <div
+                  key={addr.id}
+                  className={`address-card ${selectedAddressId === addr.id ? "active" : ""}`}
+                  onClick={() => {
+                    setSelectedAddressId(addr.id);
+                    const nextCurrency = currencyForCountry(addr.country);
+                    if (nextCurrency) setCurrency(nextCurrency);
+                  }}
+                >
+                  <span className="address-card-label">{addr.label}</span>
+                  <div className="address-card-details">
+                    <p>{addr.address}</p>
+                    <p>{addr.city}, {addr.country}</p>
+                  </div>
+                </div>
               ))}
-            </select>
-          </label>
-          <label className="span-2">
-            {tr("Address", "\u0627\u0644\u0639\u0646\u0648\u0627\u0646")}
-            <input
-              value={form.address}
-              onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            {tr("City", "\u0627\u0644\u0645\u062f\u064a\u0646\u0629")}
-            <input
-              value={form.city}
-              onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
-              required
-            />
-          </label>
-       <label>
-  {tr("Payment", "\u0627\u0644\u062f\u0641\u0639")}
+              <div
+                className={`address-card ${selectedAddressId === "new" ? "active" : ""}`}
+                onClick={() => setSelectedAddressId("new")}
+                style={{ borderStyle: "dashed", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100px" }}
+              >
+                <Plus size={20} style={{ marginBottom: "5px", color: "var(--muted)" }} />
+                <span style={{ fontSize: "0.85rem", fontWeight: "bold" }}>{tr("Add New Address", "إضافة عنوان جديد")}</span>
+              </div>
+            </div>
+          </div>
 
-  <select
-    value={form.paymentMethod || "cash_on_delivery"}
-    onChange={(event) =>
-      setForm((prev) => ({
-        ...prev,
-        paymentMethod: event.target.value,
-      }))
-    }
-  >
-    <option value="cash_on_delivery">
-      {tr("Cash On Delivery", "الدفع عند الاستلام")}
-    </option>
+          {selectedAddressId === "new" && (
+            <div className="span-2" style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px", border: "1px solid var(--line)", padding: "16px", borderRadius: "12px", background: "var(--panel-active, rgba(0,0,0,0.02))", marginTop: "5px" }}>
+              <h5 style={{ margin: 0 }}>{tr("New Address details", "تفاصيل العنوان الجديد")}</h5>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+                <label>
+                  {tr("Address Label (e.g. Home, Work)", "اسم للعنوان (مثال: البيت، العمل)")}
+                  <input
+                    placeholder={tr("Home, Work, etc.", "المنزل، العمل، إلخ.")}
+                    value={newAddress.label}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, label: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  {tr("Country", "الدولة")}
+                  <select
+                    value={newAddress.country}
+                    onChange={(e) => {
+                      const nextCountry = e.target.value;
+                      setNewAddress((prev) => ({ ...prev, country: nextCountry }));
+                      const nextCurrency = currencyForCountry(nextCountry);
+                      if (nextCurrency) setCurrency(nextCurrency);
+                    }}
+                    required
+                  >
+                    <option value="">{tr("Select country", "اختر الدولة")}</option>
+                    {COUNTRY_OPTIONS.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {tr(country.nameEn, country.nameAr)} - {country.currency}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px" }}>
+                <label>
+                  {tr("City", "المدينة")}
+                  <input
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, city: e.target.value }))}
+                    required
+                  />
+                </label>
+                <label>
+                  {tr("Street Address", "العنوان بالتفصيل")}
+                  <input
+                    placeholder={tr("Street name, Building number, Apartment...", "اسم الشارع، رقم المبنى، الشقة...")}
+                    value={newAddress.address}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, address: e.target.value }))}
+                    required
+                  />
+                </label>
+              </div>
+            </div>
+          )}
 
-    <option value="paymob_egypt">
-      {tr("Paymob (Egypt)", "باي موب")}
-    </option>
-  </select>
-</label>
+          <div className="span-2" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginTop: "15px" }}>
+            <label>
+              {tr("Payment Method", "طريقة الدفع")}
+              <select
+                value={form.paymentMethod}
+                onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+              >
+                <option value="cash_on_delivery">{tr("Cash On Delivery", "الدفع عند الاستلام")}</option>
+                <option value="paymob_egypt">{tr("Paymob (Egypt)", "باي موب")}</option>
+              </select>
+            </label>
+            <label>
+              {tr("Order Notes (Optional)", "ملاحظات الطلب (اختياري)")}
+              <input
+                placeholder={tr("Special requests, delivery instructions...", "طلبات خاصة، تعليمات التوصيل...")}
+                value={form.notes}
+                onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+              />
+            </label>
+          </div>
 
-          <button type="submit" className="store-primary-btn span-2">
-            {tr("Continue To Payment", "\u0645\u062a\u0627\u0628\u0639\u0629 \u0625\u0644\u0649 \u0627\u0644\u062f\u0641\u0639")}
+          <button type="submit" className="store-primary-btn span-2" style={{ marginTop: "20px" }}>
+            {tr("Continue To Payment", "متابعة إلى الدفع")}
           </button>
         </form>
       </section>
 
       <aside className="store-section store-summary">
-        <h3>{tr("Order Summary", "\u0645\u0644\u062e\u0635 \u0627\u0644\u0637\u0644\u0628")}</h3>
+        <h3>{tr("Order Summary", "ملخص الطلب")}</h3>
         {cartItems.map((item) => {
           const localizedItem = localizeStoreProduct(item, isArabic);
           return (
-          <p key={localizedItem.id}>
-            <span>
-              {localizedItem.displayName} x {localizedItem.quantity}
-            </span>
-            <strong>{formatPrice(localizedItem.lineTotal)}</strong>
-          </p>
+            <p key={localizedItem.id}>
+              <span>
+                {localizedItem.displayName} x {localizedItem.quantity}
+              </span>
+              <strong>{formatPrice(localizedItem.lineTotal)}</strong>
+            </p>
           );
         })}
         <p>
-          <span>{tr("Subtotal", "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0641\u0631\u0639\u064a")}</span>
+          <span>{tr("Subtotal", "الإجمالي الفرعي")}</span>
           <strong>{formatPrice(subtotal)}</strong>
         </p>
         <p>
-          <span>{tr("Shipping", "\u0627\u0644\u0634\u062d\u0646")}</span>
+          <span>{tr("Shipping", "الشحن")}</span>
           <strong>{formatPrice(shippingCost)}</strong>
         </p>
         {discountAmount > 0 && (
-          <p>
+          <p style={{ color: "#10b981" }}>
             <span>{tr("Discount", "الخصم")} ({discountCode})</span>
             <strong>-{formatPrice(discountAmount)}</strong>
           </p>
         )}
         <p className="total">
-          <span>{tr("Total", "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a")}</span>
+          <span>{tr("Total", "الإجمالي")}</span>
           <strong>{formatPrice(total)}</strong>
         </p>
       </aside>
@@ -3098,6 +3257,87 @@ function StoreAccountPage() {
     event.target.value = "";
   }
 
+  const [newAddress, setNewAddress] = useState({
+    label: "",
+    address: "",
+    city: "",
+    country: customerUser?.country || countryFromCurrency(readStoreCurrency()) || "EG",
+  });
+  const [addingAddress, setAddingAddress] = useState(false);
+
+  useEffect(() => {
+    if (customerUser) {
+      setNewAddress((prev) => ({
+        ...prev,
+        country: customerUser.country || prev.country,
+      }));
+    }
+  }, [customerUser]);
+
+  const savedAddresses = useMemo(() => {
+    const list = [...(customerUser?.addresses || [])];
+    if (list.length === 0 && customerUser?.address) {
+      list.push({
+        id: "legacy",
+        label: isArabic ? "العنوان الافتراضي" : "Default Address",
+        address: customerUser.address,
+        city: customerUser.city || "",
+        country: customerUser.country || "EG",
+      });
+    }
+    return list;
+  }, [customerUser, isArabic]);
+
+  async function handleAddAddress(e) {
+    e.preventDefault();
+    if (!newAddress.address.trim() || !newAddress.city.trim()) {
+      toast.error(tr("Address and City are required.", "العنوان والمدينة مطلوبان."));
+      return;
+    }
+    setAddingAddress(true);
+    try {
+      const nextAddresses = [...(customerUser?.addresses || [])];
+      const newAddrItem = {
+        id: Date.now().toString(),
+        label: newAddress.label.trim() || (isArabic ? `عنوان جديد ${nextAddresses.length + 1}` : `New Address ${nextAddresses.length + 1}`),
+        address: newAddress.address.trim(),
+        city: newAddress.city.trim(),
+        country: newAddress.country,
+      };
+      nextAddresses.push(newAddrItem);
+      await updateCustomerProfile({
+        addresses: nextAddresses,
+      });
+      setNewAddress({
+        label: "",
+        address: "",
+        city: "",
+        country: customerUser?.country || "EG",
+      });
+      toast.success(tr("Address added successfully.", "تم إضافة العنوان بنجاح."));
+    } catch (err) {
+      toast.error(tr("Could not add address.", "تعذر إضافة العنوان."));
+    } finally {
+      setAddingAddress(false);
+    }
+  }
+
+  async function handleDeleteAddress(id) {
+    if (id === "legacy") {
+      toast.error(tr("Default address cannot be deleted here. Update it in the profile fields.", "لا يمكن حذف العنوان الافتراضي هنا. قم بتحديثه في بيانات الملف الشخصي."));
+      return;
+    }
+    try {
+      const nextAddresses = (customerUser?.addresses || []).filter((a) => a.id !== id);
+      await updateCustomerProfile({
+        addresses: nextAddresses,
+      });
+      toast.success(tr("Address deleted successfully.", "تم حذف العنوان بنجاح."));
+    } catch (err) {
+      toast.error(tr("Could not delete address.", "تعذر حذف العنوان."));
+    }
+  }
+
   async function submitProfile(event) {
     event.preventDefault();
     if (profileSaving) {
@@ -3347,6 +3587,88 @@ function StoreAccountPage() {
                 )}
               </div>
             </div>
+          </section>
+
+          <section className="account-addresses span-2" style={{ display: "grid", gap: "15px", marginTop: "20px", borderTop: "1px solid var(--line)", paddingTop: "20px" }}>
+            <div className="store-section-head">
+              <h3>{tr("Saved Addresses", "العناوين المحفوظة")}</h3>
+              <p>{tr("Manage your saved shipping addresses for faster checkout.", "إدارة عناوين الشحن المحفوظة لتسهيل الشراء.")}</p>
+            </div>
+            
+            <div className="address-cards-grid">
+              {savedAddresses.map((addr) => (
+                <div key={addr.id} className="address-card" style={{ position: "relative" }}>
+                  <span className="address-card-label">{addr.label}</span>
+                  <div className="address-card-details">
+                    <p>{addr.address}</p>
+                    <p>{addr.city}, {addr.country}</p>
+                  </div>
+                  {addr.id !== "legacy" && (
+                    <button
+                      type="button"
+                      className="store-danger-btn address-card-delete-btn"
+                      onClick={() => handleDeleteAddress(addr.id)}
+                      style={{ position: "absolute", top: "10px", [isArabic ? "left" : "right"]: "10px", padding: "4px 8px", minHeight: "auto", width: "auto" }}
+                      title={tr("Delete address", "حذف العنوان")}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form className="store-checkout-form" onSubmit={handleAddAddress} style={{ display: "grid", gap: "12px", border: "1px solid var(--line)", padding: "16px", borderRadius: "12px", background: "var(--panel-active, rgba(0,0,0,0.02))", marginTop: "10px" }}>
+              <h5 style={{ margin: 0, fontSize: "0.95rem" }}>{tr("Add a new address", "إضافة عنوان جديد")}</h5>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+                <label>
+                  {tr("Address Label (e.g. Home, Work)", "اسم للعنوان (مثال: البيت، العمل)")}
+                  <input
+                    placeholder={tr("Home, Work, etc.", "المنزل، العمل، إلخ.")}
+                    value={newAddress.label}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, label: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  {tr("Country", "الدولة")}
+                  <select
+                    value={newAddress.country}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, country: e.target.value }))}
+                    required
+                  >
+                    <option value="">{tr("Select country", "اختر الدولة")}</option>
+                    {COUNTRY_OPTIONS.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {tr(country.nameEn, country.nameAr)} - {country.currency}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px" }}>
+                <label>
+                  {tr("City", "المدينة")}
+                  <input
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, city: e.target.value }))}
+                    required
+                  />
+                </label>
+                <label>
+                  {tr("Street Address", "العنوان بالتفصيل")}
+                  <input
+                    placeholder={tr("Street name, Building number, Apartment...", "اسم الشارع، رقم المبنى، الشقة...")}
+                    value={newAddress.address}
+                    onChange={(e) => setNewAddress((prev) => ({ ...prev, address: e.target.value }))}
+                    required
+                  />
+                </label>
+              </div>
+              <button type="submit" className="store-secondary-btn" disabled={addingAddress} style={{ justifySelf: "start", padding: "8px 16px" }}>
+                <Plus size={16} style={{ marginRight: "4px" }} />
+                {addingAddress ? tr("Adding...", "جاري الإضافة...") : tr("Save Address", "حفظ العنوان")}
+              </button>
+            </form>
           </section>
 
           <form className="store-checkout-form account-form" onSubmit={submitPassword}>

@@ -1658,9 +1658,17 @@
   .store-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    padding: 12px;
-    align-items: start;
-    gap: 10px 12px;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 6px 12px;
+  }
+
+  .store-brand strong {
+    font-size: 0.9rem;
+  }
+
+  .store-brand span {
+    font-size: 0.65rem;
   }
 
   .store-nav {
@@ -1670,8 +1678,10 @@
     justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding: 2px 0;
+    margin-top: 2px;
     scrollbar-width: none;
+    border-top: 1px solid var(--line);
   }
 
   .store-nav::-webkit-scrollbar {
@@ -1681,12 +1691,47 @@
   .store-nav a {
     flex: 0 0 auto;
     white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 4px 10px;
   }
 
   .store-header-actions {
     width: auto;
     justify-content: flex-end;
     grid-column: 2;
+    gap: 6px;
+  }
+
+  .store-select-mini {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  .store-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .store-icon-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .store-account-chip {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .store-account-chip span {
+    display: none;
+  }
+
+  .store-account-chip .store-avatar {
+    width: 28px;
+    height: 28px;
   }
 
   .store-main {
@@ -1868,4 +1913,117 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ============================================================
+   FIRST-ORDER DISCOUNT ANNOUNCEMENT BANNER
+   ============================================================ */
+.store-promo-banner {
+  background: linear-gradient(90deg, #ff7a18, #af002d);
+  color: #fff;
+  text-align: center;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  z-index: 25;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.store-promo-banner-content {
+  display: inline-block;
+}
+
+.store-promo-banner .promo-code {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px dashed #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin: 0 4px;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+/* ============================================================
+   MULTIPLE ADDRESS CARDS GRID
+   ============================================================ */
+.address-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.address-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.address-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+}
+
+.address-card.active {
+  border-color: var(--brand);
+  background: rgba(249, 115, 22, 0.04);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+.address-card-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--brand);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.address-card-details p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.address-card-details p:last-child {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Delete Button on Address Card */
+.address-card-delete-btn {
+  background: transparent !important;
+  color: #ef4444 !important;
+  border: none !important;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.address-card-delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* RTL & LTR positioning */
+[dir="rtl"] .address-card-delete-btn {
+  left: 10px;
+  right: auto;
+}
+[dir="ltr"] .address-card-delete-btn {
+  right: 10px;
+  left: auto;
 }

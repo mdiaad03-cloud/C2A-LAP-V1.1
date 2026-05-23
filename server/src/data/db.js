@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
 import { JSONFilePreset } from "lowdb/node";
 import { initialShippingCompanies, initialUsers } from "./seed.js";
 import { nowIso } from "../utils/dateUtils.js";
@@ -248,6 +249,22 @@ async function seedDefaults() {
       createdAt: nowIso(),
       updatedAt: nowIso(),
     }));
+  }
+
+  db.coupons ||= [];
+  if (!db.coupons.some((c) => c.code.toUpperCase() === "FIRST200")) {
+    db.coupons.push({
+      id: nanoid(),
+      code: "FIRST200",
+      type: "fixed",
+      value: 200,
+      usageLimit: 0,
+      usageCount: 0,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      isFirstOrderOnly: true,
+    });
   }
 
   db.meta.updatedAt = nowIso();

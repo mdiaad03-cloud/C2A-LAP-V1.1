@@ -13,14 +13,35 @@ export default function ShippingSection({
   shippingCompanies,
   onCreateShipping,
   onRefreshBostaHealth,
+  onSyncBostaStatus,
   lang = "en",
 }) {
   const [form, setForm] = useState(blank);
   const [saving, setSaving] = useState(false);
   const [bostaHealth, setBostaHealth] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
+  const [syncingOrderId, setSyncingOrderId] = useState(null);
   const isArabic = lang === "ar";
   const tr = (en, ar) => (isArabic ? ar : en);
+
+  async function handleSyncStatus(orderId) {
+    if (syncingOrderId || typeof onSyncBostaStatus !== "function") {
+      return;
+    }
+    setSyncingOrderId(orderId);
+    try {
+      await onSyncBostaStatus(orderId);
+      toast.success(tr("Bosta status synced successfully.", "تم مزامنة حالة الشحنة مع بوسطة بنجاح."));
+      if (typeof onRefreshBostaHealth === "function") {
+        const health = await onRefreshBostaHealth();
+        setBostaHealth(health);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.error || tr("Sync failed.", "فشلت مزامنة حالة الشحنة."));
+    } finally {
+      setSyncingOrderId(null);
+    }
+  }
 
   useEffect(() => {
     if (role !== "admin" || typeof onRefreshBostaHealth !== "function") {
@@ -147,6 +168,31 @@ export default function ShippingSection({
               </span>
             </div>
 
+            {bostaHealth?.stats ? (
+              <div className="bosta-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", padding: "0 18px", marginTop: "15px", marginBottom: "15px" }}>
+                <div className="stat-card" style={{ background: "var(--panel-active, #f8fafc)", padding: "10px", borderRadius: "12px", border: "1px solid var(--line)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{bostaHealth.stats.total}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{tr("Total Shipped", "إجمالي الشحنات")}</div>
+                </div>
+                <div className="stat-card" style={{ background: "var(--panel-active, #f8fafc)", padding: "10px", borderRadius: "12px", border: "1px solid var(--line)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#f59e0b" }}>{bostaHealth.stats.pendingPickup}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{tr("Pending Pickup", "قيد انتظار الاستلام")}</div>
+                </div>
+                <div className="stat-card" style={{ background: "var(--panel-active, #f8fafc)", padding: "10px", borderRadius: "12px", border: "1px solid var(--line)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#3b82f6" }}>{bostaHealth.stats.inTransit}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{tr("In Transit", "جارٍ الشحن")}</div>
+                </div>
+                <div className="stat-card" style={{ background: "var(--panel-active, #f8fafc)", padding: "10px", borderRadius: "12px", border: "1px solid var(--line)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#10b981" }}>{bostaHealth.stats.delivered}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{tr("Delivered", "تم التسليم")}</div>
+                </div>
+                <div className="stat-card" style={{ background: "var(--panel-active, #f8fafc)", padding: "10px", borderRadius: "12px", border: "1px solid var(--line)", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#ef4444" }}>{bostaHealth.stats.cancelled}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{tr("Returned / Cancelled", "مرتجع / ملغي")}</div>
+                </div>
+              </div>
+            ) : null}
+
             <div className="agent-suggestion-box">
               <div className="agent-suggestion-head">
                 <strong>{tr("Current Summary", "الملخص الحالي")}</strong>
@@ -164,6 +210,72 @@ export default function ShippingSection({
               </p>
             </div>
           </section>
+
+          {bostaHealth?.orders && bostaHealth.orders.length > 0 ? (
+            <section className="panel table-panel">
+              <div className="panel-head">
+                <h3>{tr("Bosta Shipments Tracker", "تتبع شحنات بوسطة")}</h3>
+                <span>{tr("List of orders shipped via Bosta and their live tracking status.", "قائمة بالطلبات المشحونة عبر بوسطة وحالة تتبعها المباشرة.")}</span>
+              </div>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{tr("Order No", "رقم الطلب")}</th>
+                      <th>{tr("Customer / Phone", "العميل / الهاتف")}</th>
+                      <th>{tr("COD Amount", "مبلغ التحصيل")}</th>
+                      <th>{tr("Tracking Number", "رقم التتبع")}</th>
+                      <th>{tr("Shipping Status", "حالة الشحن")}</th>
+                      <th>{tr("Actions", "إجراءات")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bostaHealth.orders.map((shipment) => (
+                      <tr key={shipment.id}>
+                        <td><strong>{shipment.orderNumber}</strong></td>
+                        <td>
+                          <div>{shipment.customerName}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{shipment.customerPhone}</div>
+                        </td>
+                        <td>{shipment.total} EGP</td>
+                        <td>
+                          {shipment.trackingNumber ? (
+                            <a
+                              href={`https://tracking.bosta.co/tracker/${shipment.trackingNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textDecoration: "underline", color: "var(--brand, #ff7a18)", fontWeight: "bold" }}
+                            >
+                              {shipment.trackingNumber}
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td>
+                          <span className={`status-pill status-${String(shipment.shippingStatus || "").toLowerCase().replace(/[^a-z0-9]/g, "_")}`}>
+                            {shipment.shippingStatus || tr("Unknown", "غير معروف")}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            title={tr("Sync Status", "مزامنة الحالة")}
+                            onClick={() => handleSyncStatus(shipment.id)}
+                            disabled={syncingOrderId === shipment.id}
+                            style={{ padding: "4px 8px" }}
+                          >
+                            <RefreshCw size={14} className={syncingOrderId === shipment.id ? "spin" : ""} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
         </>
       ) : null}
 

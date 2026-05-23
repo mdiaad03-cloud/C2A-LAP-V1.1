@@ -153,6 +153,22 @@ router.get(
       return res.status(400).json({ error: "This coupon usage limit has been reached." });
     }
 
+    if (coupon.isFirstOrderOnly) {
+      const customerAccount = await resolveCheckoutCustomer(req, db);
+      if (!customerAccount) {
+        return res.status(401).json({ error: "Please log in first to apply this first-order promo code." });
+      }
+      const userOrders = db.onlineOrders.filter(
+        (order) =>
+          (order.customerId === customerAccount.id ||
+           (customerAccount.email && String(order.customerEmail || "").toLowerCase() === String(customerAccount.email).toLowerCase())) &&
+          order.status !== "cancelled"
+      );
+      if (userOrders.length > 0) {
+        return res.status(400).json({ error: "This promo code is only valid for your first order." });
+      }
+    }
+
     res.json({
       coupon: {
         code: coupon.code,

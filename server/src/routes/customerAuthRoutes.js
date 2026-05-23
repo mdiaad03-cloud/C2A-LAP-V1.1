@@ -119,6 +119,19 @@ function applyProfileFields(user, payload = {}) {
   if (payload.avatarUrl !== undefined) {
     user.avatarUrl = asOptionalText(payload.avatarUrl);
   }
+  if (payload.addresses !== undefined) {
+    if (Array.isArray(payload.addresses)) {
+      user.addresses = payload.addresses.map(addr => ({
+        id: addr.id || nanoid(),
+        label: String(addr.label || "").trim() || "Address",
+        address: String(addr.address || "").trim(),
+        city: String(addr.city || "").trim(),
+        country: sanitizeCountry(addr.country || "EG"),
+      }));
+    } else {
+      user.addresses = [];
+    }
+  }
 }
 
 function issueSession(user) {
@@ -150,6 +163,7 @@ async function upsertSocialCustomer(db, profile, provider) {
       gender: "",
       birthDate: "",
       avatarUrl: "",
+      addresses: [],
       passwordHash: await bcrypt.hash(`oauth-${provider}-${nanoid()}`, 10),
       role: "customer",
       authProvider: provider,
@@ -168,6 +182,7 @@ async function upsertSocialCustomer(db, profile, provider) {
     user.gender ||= "";
     user.birthDate ||= "";
     user.avatarUrl ||= "";
+    user.addresses ||= [];
     user.updatedAt = nowIso();
   }
 
@@ -257,6 +272,7 @@ router.post(
       gender,
       birthDate,
       avatarUrl,
+      addresses: [],
       passwordHash: await bcrypt.hash(password, 10),
       role: "customer",
       authProvider: "local",

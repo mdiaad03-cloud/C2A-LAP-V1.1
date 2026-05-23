@@ -11,6 +11,7 @@ export function publicUser(user) {
     gender: user.gender || "",
     birthDate: user.birthDate || "",
     avatarUrl: user.avatarUrl || "",
+    addresses: user.addresses || [],
     role: user.role,
     authProvider: user.authProvider || "local",
     isActive: user.isActive,
