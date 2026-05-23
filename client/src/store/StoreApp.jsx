@@ -2611,7 +2611,21 @@ function StoreCartPage() {
                   toast.error(tr("Invalid promo code.", "كود الخصم غير صالح."));
                 }
               } catch (error) {
-                const errMsg = error?.response?.data?.error || tr("Invalid promo code.", "كود الخصم غير صالح.");
+                const backendError = error?.response?.data?.error || "";
+                let errMsg = tr("Invalid promo code.", "كود الخصم غير صالح.");
+                if (backendError.includes("first order")) {
+                  errMsg = tr("This promo code is only valid for your first order.", "كود الخصم هذا صالح لطلبك الأول فقط.");
+                } else if (backendError.includes("log in first")) {
+                  errMsg = tr("Please log in first to apply this promo code.", "يرجى تسجيل الدخول أولاً لتطبيق كود الخصم.");
+                } else if (backendError.includes("limit")) {
+                  errMsg = tr("This promo code usage limit has been reached.", "تم الوصول للحد الأقصى لاستخدام كود الخصم.");
+                } else if (backendError.includes("inactive")) {
+                  errMsg = tr("This promo code is inactive.", "كود الخصم هذا غير نشط.");
+                } else if (backendError.includes("not found")) {
+                  errMsg = tr("Promo code not found.", "كود الخصم غير موجود.");
+                } else if (backendError) {
+                  errMsg = backendError;
+                }
                 toast.error(errMsg);
               }
             }}
@@ -2735,10 +2749,10 @@ function StoreCheckoutPage() {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${isArabic ? "ar" : "en"}`
+          const response = await storeApi.get(
+            `/geocode?lat=${latitude}&lon=${longitude}`
           );
-          const data = await response.json();
+          const data = response.data;
           if (data && data.address) {
             const addrInfo = data.address;
             const road = addrInfo.road || addrInfo.suburb || addrInfo.neighbourhood || addrInfo.village || "";

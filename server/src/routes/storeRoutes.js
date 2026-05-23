@@ -1,4 +1,5 @@
 import { Router } from "express";
+import axios from "axios";
 import { nanoid } from "nanoid";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate, authorize } from "../middleware/auth.js";
@@ -177,6 +178,36 @@ router.get(
         value: coupon.value,
       },
     });
+  })
+);
+
+router.get(
+  "/geocode",
+  asyncHandler(async (req, res) => {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "Latitude and longitude are required." });
+    }
+    try {
+      const response = await axios.get(
+        "https://nominatim.openstreetmap.org/reverse",
+        {
+          params: {
+            lat,
+            lon,
+            format: "json",
+            "accept-language": "ar,en"
+          },
+          headers: {
+            "User-Agent": "C2ALAP-Storefront/1.0 (mdiaad03@gmail.com)"
+          }
+        }
+      );
+      res.json(response.data);
+    } catch (error) {
+      console.error("Geocoding proxy error:", error.response?.data || error.message);
+      res.status(500).json({ error: "Failed to reverse geocode coordinates." });
+    }
   })
 );
 
