@@ -596,6 +596,36 @@ export default function App() {
     return response.data;
   }
 
+  async function downloadSystemBackup() {
+    const response = await api.get("/system/backup", {
+      responseType: "blob",
+    });
+    const blob = new Blob([response.data], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `c2a-backup-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
+  async function downloadSalesExcel() {
+    const response = await api.get("/system/sales-excel", {
+      responseType: "blob",
+    });
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sales_autosave-${Date.now()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
   if (!isAuthenticated) {
     return (
       <>
@@ -745,6 +775,8 @@ export default function App() {
                 settings={storeSettings}
                 onSave={saveStoreSettings}
                 onSendTestEmail={sendTestEmail}
+                onDownloadBackup={downloadSystemBackup}
+                onDownloadSalesExcel={downloadSalesExcel}
                 lang={lang}
               />
             ) : null}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { Mail, Plus, Save, Settings2, Trash2 } from "lucide-react";
+import { Database, Download, Mail, Plus, Save, Settings2, Trash2 } from "lucide-react";
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "../components/socialIcons";
 
 const blankFaqItem = (index = 0) => ({
@@ -139,7 +139,7 @@ function SocialLinkEditor({ title, titleAr, icon, value, onToggle, onChangeUrl, 
   );
 }
 
-export default function StoreSettingsSection({ settings, onSave, onSendTestEmail, lang = "en" }) {
+export default function StoreSettingsSection({ settings, onSave, onSendTestEmail, onDownloadBackup, onDownloadSalesExcel, lang = "en" }) {
   const [form, setForm] = useState(blank);
   const [saving, setSaving] = useState(false);
   const [testEmailTo, setTestEmailTo] = useState("");
@@ -725,6 +725,40 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
             <button type="button" className="secondary-btn" disabled={testEmailLoading || !testEmailTo} onClick={sendTestEmail}>
               <Mail size={16} />
               {testEmailLoading ? tr("Sending...", "جارٍ الإرسال...") : tr("Send Test Email", "إرسال رسالة اختبار")}
+            </button>
+          </div>
+        </section>
+
+        <section className="span-2 panel table-panel">
+          <div className="panel-head row-head">
+            <div>
+              <h3>{tr("Database Backup & Export", "النسخ الاحتياطي وتصدير البيانات")}</h3>
+              <span>{tr("Download a full database backup or download the automatically synchronized Excel sales workbook.", "قم بتنزيل نسخة احتياطية كاملة من قاعدة البيانات أو كتاب العمل لملف إكسيل المزامَن تلقائياً.")}</span>
+            </div>
+            <span className="agent-icon-badge">
+              <Database size={18} />
+            </span>
+          </div>
+          <div className="inline-actions stretch" style={{ gap: "12px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={onDownloadBackup}
+              disabled={!onDownloadBackup}
+              style={{ flex: 1, minWidth: "200px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+            >
+              <Download size={16} />
+              {tr("Download JSON Backup", "تحميل النسخة الاحتياطية (JSON)")}
+            </button>
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={onDownloadSalesExcel}
+              disabled={!onDownloadSalesExcel}
+              style={{ flex: 1, minWidth: "200px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+            >
+              <Download size={16} />
+              {tr("Download Sales Excel", "تحميل شيت المبيعات (Excel)")}
             </button>
           </div>
         </section>
