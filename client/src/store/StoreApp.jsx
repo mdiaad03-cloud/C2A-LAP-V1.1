@@ -2598,7 +2598,9 @@ function StoreCartPage() {
                 return;
               }
               try {
-                const response = await storeApi.get(`/coupons/validate/${code}`);
+                const response = await storeApi.get(`/coupons/validate/${code}`, {
+                  headers: customerHeaders(),
+                });
                 if (response.data?.coupon) {
                   setAppliedCoupon(response.data.coupon);
                   setDiscountCode(code);
@@ -3020,11 +3022,12 @@ function StorePaymentPage() {
     console.log("CONFIRM PAYMENT HIT");
     setSaving(true);
     try {
-      const order = await placeOrder({
+      const responseData = await placeOrder({
         customer: checkoutDraft.customer,
         paymentMethod: checkoutDraft.paymentMethod || "cash_on_delivery",
         paymentReference: checkoutDraft.paymentReference || "",
       });
+      const order = responseData?.order || responseData;
       if (checkoutDraft.paymentMethod === "paymob_egypt") {
         console.log("PAYMOB FLOW DETECTED - STOPPING SUCCESS NAVIGATION");
         return;

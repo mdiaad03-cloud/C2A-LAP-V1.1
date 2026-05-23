@@ -251,6 +251,48 @@ app.get("/api/image-proxy", async (req, res) => {
   }
 });
 
+// Google Site Verification, robots.txt, and sitemap.xml direct endpoints
+app.get("/google0ba802e198b6f55a.html", (req, res) => {
+  res.setHeader("Content-Type", "text/html");
+  res.send("google-site-verification: google0ba802e198b6f55a.html");
+});
+
+app.get("/robots.txt", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.send("User-agent: *\nAllow: /\nSitemap: https://c2a-lap-v11-production.up.railway.app/sitemap.xml\n");
+});
+
+app.get("/sitemap.xml", (req, res) => {
+  res.setHeader("Content-Type", "application/xml");
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://c2a-lap-v11-production.up.railway.app/store</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://c2a-lap-v11-production.up.railway.app/store/products</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://c2a-lap-v11-production.up.railway.app/store/support</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://c2a-lap-v11-production.up.railway.app/store/account</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>`);
+});
+
 app.use("/api", apiRoutes);
 app.use("/api/paymob", paymobRoutes);
 app.use("/uploads", express.static(uploadsDir, { dotfiles: 'allow' }));
