@@ -361,6 +361,14 @@ async function bootstrap() {
     console.error("Initial Excel sync failed:", error);
   }
 
+  // Initialize automated backups scheduler
+  try {
+    const { scheduleAutomatedBackups } = await import("./services/backupScheduler.js");
+    scheduleAutomatedBackups();
+  } catch (scheduleErr) {
+    console.error("Failed to initialize backup scheduler:", scheduleErr);
+  }
+
   const ports = [env.adminPort, env.storePort];
   const uniquePorts = [...new Set(ports)];
 

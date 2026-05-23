@@ -1,5 +1,8 @@
+import fs from "node:fs/promises";
 import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
+import { getRawDbPath } from "../data/db.js";
+import { getSalesWorkbookPath } from "./excelAutoSaveService.js";
 
 let transporter;
 const FIXED_RECIPIENT = "mdiaad03@gmail.com";
@@ -577,4 +580,80 @@ export async function sendSystemEventEmail({ eventName, details, error }) {
   });
 
   return { sent: true };
+}
+
+export async function sendSystemBackupEmail() {
+  const transport = createTransporter();
+  if (!transport) {
+    console.warn("Mail is not configured. Automated backup email skipped.");
+    return { sent: false, reason: "mail_not_configured" };
+  }
+
+  try {
+    const dbPath = await getRawDbPath();
+    const excelPath = getSalesWorkbookPath();
+
+    const timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+    const subject = `[Automated Backup] C2A LAP System Backup - ${timestamp}`;
+    const text = `Automated backup generated on ${timestamp}.\n\nAttached:\n1. Database backup (db.json)\n2. Sales workbook (sales_autosave.xlsx)`;
+
+    const html = renderMailShell({
+      eyebrow: "Automated Data Protection",
+      title: "System Backup Successful",
+      intro: "This email contains the automated database JSON file and the Excel sales workbook.",
+      body: `
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 18px; padding: 20px; color: #166534; line-height: 1.8;">
+          <strong>Data Backup Completed successfully!</strong>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #15803d;">
+            The backup files have been generated and attached to this email. You can save them as a recovery point.
+          </p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-top: 20px;">
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; color:#64748b; width: 30%;">Database File</td>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; font-family:monospace; font-weight:bold;">db.json</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; color:#64748b;">Sales Sheet</td>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; font-family:monospace; font-weight:bold;">sales_autosave.xlsx</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; color:#64748b;">Timestamp</td>
+            <td style="padding:10px 0; border-bottom:1px solid #e2e8f0; font-size: 13px;">${escapeHtml(timestamp)}</td>
+          </tr>
+        </table>
+      `,
+      footerNote: "Automated backup service powered by C2A LAP scheduler."
+    });
+
+    const attachments = [];
+    try {
+      await fs.access(dbPath);
+      attachments.push({ filename: "db.json", path: dbPath });
+    } catch (err) {
+      console.error("Backup email failed to access db.json:", err.message);
+    }
+
+    try {
+      await fs.access(excelPath);
+      attachments.push({ filename: "sales_autosave.xlsx", path: excelPath });
+    } catch (err) {
+      console.error("Backup email failed to access sales_autosave.xlsx:", err.message);
+    }
+
+    await transport.sendMail({
+      from: env.mailFrom,
+      to: FIXED_RECIPIENT,
+      subject,
+      text,
+      html,
+      attachments,
+    });
+
+    console.log("Automated backup email sent successfully.");
+    return { sent: true };
+  } catch (error) {
+    console.error("Automated backup email sending failed:", error);
+    return { sent: false, error: error.message };
+  }
 }
