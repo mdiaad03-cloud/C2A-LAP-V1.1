@@ -92,29 +92,29 @@ const allowedOrigins = parseAllowedOrigins(env.corsOrigin);
 
 app.set("trust proxy", 1);
 
-// CORS is required for API requests. Static frontend assets should not be blocked by CORS policies.
 app.use(
   "/api",
-  cors({
-    origin(origin, callback) {
-      if (env.allowAllCors) {
-        callback(null, true);
-        return;
-      }
+  cors((req, callback) => {
+    const origin = req.header("Origin");
+    const host = req.headers.host;
+    const isSameOrigin = origin && (origin === `http://${host}` || origin === `https://${host}`);
 
-      if (
-        !origin
-        || allowedOrigins.length === 0
-        || allowedOrigins.includes(origin)
-        || isAllowedDevOrigin(origin)
-        || isAllowedTunnelOrigin(origin)
-      ) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("Origin not allowed by CORS policy."));
-    },
-    credentials: false,
+    let allowed = false;
+    if (
+      env.allowAllCors
+      || !origin
+      || isSameOrigin
+      || allowedOrigins.includes(origin)
+      || isAllowedDevOrigin(origin)
+      || isAllowedTunnelOrigin(origin)
+    ) {
+      allowed = true;
+    }
+
+    callback(null, {
+      origin: allowed,
+      credentials: false,
+    });
   }),
 );
 
