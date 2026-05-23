@@ -1,0 +1,6 @@
+{
+  "targetPath": "C:\\Users\\mdiaa\\.gemini\\antigravity\\scratch\\c2a-lap-fixed\\client\\dist\\index.html",
+  "exists": true,
+  "readable": true,
+  "content": "<!doctype html>\r\n<html lang=\"en\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\r\n    <title>C2A LAP | Proprietary Sales & Store Platform</title>\n    <script type=\"module\" crossorigin src=\"/assets/index-DBc2UwrG.js\"></script>\n    <link rel=\"stylesheet\" crossorigin href=\"/assets/index-BEetB8uE.css\">\n  </head>\r\n  <body>\r\n    <div id=\"root\"></div>\r\r\n  </body>\r\n</html>\r\n"
+}

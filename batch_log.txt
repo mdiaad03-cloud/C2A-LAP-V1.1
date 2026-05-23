@@ -1,0 +1,2 @@
+Using Node: C:\Program Files\nodejs\node.exe 
+Done, wrote results to inspect_results.txt

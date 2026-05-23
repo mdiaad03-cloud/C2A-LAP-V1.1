@@ -1,0 +1,28 @@
+{
+  "statusCode": 200,
+  "headers": {
+    "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+    "origin-agent-cluster": "?1",
+    "referrer-policy": "no-referrer",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "SAMEORIGIN",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0",
+    "accept-ranges": "bytes",
+    "cache-control": "public, max-age=0",
+    "last-modified": "Sat, 23 May 2026 00:03:11 GMT",
+    "etag": "W/\"1f7-19e52249a28\"",
+    "content-type": "text/html; charset=utf-8",
+    "content-length": "503",
+    "vary": "Accept-Encoding",
+    "date": "Sat, 23 May 2026 00:03:59 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5"
+  },
+  "body": "<!doctype html>\r\n<html lang=\"en\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\r\n    <title>C2A LAP | Proprietary Sales & Store Platform</title>\n    <script type=\"module\" crossorigin src=\"/assets/index-DovMaNYC.js\"></script>\n    <link rel=\"stylesheet\" crossorigin href=\"/assets/index-BXaRDBEo.css\">\n  </head>\r\n  <body>\r\n    <div id=\"root\"></div>\r\r\n  </body>\r\n</html"
+}

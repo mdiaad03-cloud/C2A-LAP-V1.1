@@ -1,0 +1,253 @@
+Total products: 20
+Zero-priced products: 20
+
+--- Products Details & Matches ---
+Product ID: gGuoDKNxWmSeeJe785j2u
+SKU: SKU-HP-HP-845-G8-RYZEN-5-PRO-1
+Name: HP 845 G8 RYZEN 5 PRO
+Specs: RAM 16GB, Storage 256.M.2
+  Matched Sales (12):
+    - Sale ID: XvCSB03Rjkhpykqb1mq5R, Date: 2026-03-17, PurchasePrice: 11500, SellingPrice: 12600
+    - Sale ID: GcZCurg8yb9IiQCVxJNF2, Date: 2026-03-17, PurchasePrice: 11500, SellingPrice: 12600
+    - Sale ID: bxGKc1L1lwSV8u6k1DAyV, Date: 2026-03-18, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: x9QUp7l8m2nymyR7-fbwA, Date: 2026-03-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: Gs4sa1x907w93ebXzE-zj, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: RBQElkFPheIUZIhIJ4u-C, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: A3Tg47CqhhBFK3Oeo_Pzf, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: 3ThgkzTMDtkR_IpvT_Saz, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: zrrInZfoS2jO_uJjaYbVl, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: GSPMRXgDOhu2sne7j2oeu, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: _V030Int1ugIKeJ9IZDUi, Date: 2026-05-22, PurchasePrice: 11500, SellingPrice: 14600
+    - Sale ID: ID8i5HACd6qga9_jJR8A8, Date: 2026-05-22, PurchasePrice: 0, SellingPrice: 0
+  Matched Online Orders (20):
+    - Order #: C2A-ON-20260522-0054, Status: shipped, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0047, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0041, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0040, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0028, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0027, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0023, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0022, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260322-0019, Status: shipped, Price in Order: undefined
+    - Order #: C2A-ON-20260318-0018, Status: confirmed, Price in Order: undefined
+    - Order #: C2A-ON-20260318-0017, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0016, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0014, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0013, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0012, Status: delivered, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0011, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0010, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0009, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0008, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260305-0007, Status: cancelled, Price in Order: undefined
+----------------------------------
+
+Product ID: B_asg4aWMCHYCXAIrQz6j
+SKU: SKU-HP-ELITEBOOK-X360-1040-G7-IN-2
+Name: EliteBook X360 1040 G7 Intel i5-10310U
+Specs: RAM 16GB, Storage 256.M.2
+  Matched Sales (1):
+    - Sale ID: jdlbF3Uu-melkvtfwmu1H, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+  Matched Online Orders (1):
+    - Order #: C2A-ON-20260522-0048, Status: pending, Price in Order: undefined
+----------------------------------
+
+Product ID: R2oOkfUfsELV0EJ5DVVJN
+SKU: SKU-HP-PROBOOK-445R-G6-AMD-RYZEN-3
+Name: ProBook 445R G6 AMD Ryzen 5 Pro 3500U
+Specs: RAM 8GB, Storage 256.M.2
+  Matched Sales (4):
+    - Sale ID: oLIcLYC23YdHX1FfM9xtd, Date: 2026-05-22, PurchasePrice: 7000, SellingPrice: 10100
+    - Sale ID: Ne2_JIMGkltZphZdtGSFT, Date: 2026-05-22, PurchasePrice: 7000, SellingPrice: 10100
+    - Sale ID: O8gOsnxkS6TPGBFC259uk, Date: 2026-05-22, PurchasePrice: 7000, SellingPrice: 10100
+    - Sale ID: kYtkeW0kIRyE2BWpgG97z, Date: 2026-05-22, PurchasePrice: 7000, SellingPrice: 10100
+  Matched Online Orders (6):
+    - Order #: C2A-ON-20260522-0049, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0046, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0043, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0042, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260317-0015, Status: cancelled, Price in Order: undefined
+    - Order #: C2A-ON-20260305-0007, Status: cancelled, Price in Order: undefined
+----------------------------------
+
+Product ID: wXsqc0irbudUUCtRNls1t
+SKU: SKU-DELL-DELL-3520-I5-7-4
+Name: dell 3520 i5-7
+Specs: RAM 8GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: fgsrgMKiIxeBisWlkax9Z
+SKU: SKU-TOSHIBA-TOSHIBA-PORTEGE-X40--5
+Name: TOSHIBA Portege X40-J Intel i5-1135G7
+Specs: RAM 16GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: 4cs_ldnOl1pLadq7vmQSb
+SKU: SKU-DELL-DELL-LATITUDE-5590-INTE-6
+Name: DELL Latitude 5590 Intel i5-8350U
+Specs: RAM 8GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: jM_WWmeqqE2zMHhokyWSW
+SKU: SKU-DELL-DELL-PRECISION-5560-7
+Name: DELL Precision 5560
+Specs: RAM 16GB, Storage 512 M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: DGmN7Azpp3Vo3NPBmHJTk
+SKU: SKU-HP-ELITEBOOK-830-G7-I5-8
+Name: elitebook 830 G7 I5
+Specs: RAM 16GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: HA-4gG16D9VTuyTlPKJaE
+SKU: SKU-HP-HP-850-G7-I5-10310U-9
+Name: HP 850 G7 I5-10310U
+Specs: RAM 16GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: Ghxi1pPycAUh9BtgGItV0
+SKU: SKU-HP-HP-PROBOOK-445-G8-RYZEN-7-10
+Name: HP ProBook 445 G8 RYZEN 7 5800U
+Specs: RAM 16GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: _8w5xcu7j01iWrivQMpJC
+SKU: SKU-HP-HP-PROBOOK-445-G9-RYZEN-5-11
+Name: HP ProBook 445 G9 RYZEN 5 5625U
+Specs: RAM 16GB, Storage 256.M.2
+  Matched Sales (1):
+    - Sale ID: iXAZYYc__qdU2IaMelk5z, Date: 2026-05-22, PurchasePrice: 12000, SellingPrice: 15100
+  Matched Online Orders (1):
+    - Order #: C2A-ON-20260522-0050, Status: pending, Price in Order: undefined
+----------------------------------
+
+Product ID: d3tb2SGZLhBKrlSNYKe9v
+SKU: SKU-HP-HP-PROBOOK-445-G8-RYZEN-5-12
+Name: HP ProBook 445 G8 RYZEN 5 5600U
+Specs: RAM 16GB, Storage 256.M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: atWDQcO7iY7on5Ox7JACa
+SKU: SKU-HP-HP-PROBOOK-X360-435-G9-RY-13
+Name: HP ProBook X360 435 G9 RYZEN 7 Pro 5875U
+Specs: RAM 16GB, Storage 512 M.2
+  Matched Sales (9):
+    - Sale ID: cHiZJ3901adc6TGoGNgBx, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: WlVdYi5PS__cGgRZzgJ6S, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: QQN95qDBP7F7QvdOWyCMt, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: wVUBJ4BksjJe-_sDtrnbE, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: FzTMLcBCt8UbkHNahaq8C, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: enAx7JdNR6lVOpIe97elp, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: sdsqqD-WsNRF1pJahpmfV, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: 0khOyzT33soujpYU4sOjX, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+    - Sale ID: eG4k0-596FHDtfQ98xEpK, Date: 2026-05-22, PurchasePrice: 15500, SellingPrice: 18600
+  Matched Online Orders (9):
+    - Order #: C2A-ON-20260522-0051, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0045, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0044, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0031, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0029, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0025, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0024, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0021, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0020, Status: shipped, Price in Order: undefined
+----------------------------------
+
+Product ID: oRu6XEyPR_SBN2oPJsHYP
+SKU: SKU-HP-HP-ZBOOK-STUDIO-G8-14
+Name: HP ZBOOK STUDIO G8
+Specs: RAM 32GB, Storage 512 M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: kF_iBGlh4rxNqeLFK4sDn
+SKU: SKU-HP-PROBOOK-X360-435-G8-AMD-R-15
+Name: ProBook X360 435 G8 AMD Ryzen 7 Pro 5850U
+Specs: RAM 16GB, Storage 512 M.2
+  Matched Sales (6):
+    - Sale ID: SdGX4d9yBNxozStQElFYo, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+    - Sale ID: 2c5VM--qcNddIJ3EZ3gme, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+    - Sale ID: mQV8Pg7dXyMeDz7i_5iAF, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+    - Sale ID: IiUwCQLmHl46rXTUh2WY5, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+    - Sale ID: r1Cdwu93v31pBN_rhJDFA, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+    - Sale ID: uc7CyAziVoLXOteAEs5ZJ, Date: 2026-05-22, PurchasePrice: 14500, SellingPrice: 17600
+  Matched Online Orders (6):
+    - Order #: C2A-ON-20260522-0052, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0034, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0033, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0032, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0030, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0026, Status: pending, Price in Order: undefined
+----------------------------------
+
+Product ID: UjY2936xnaQChkyfIIYAe
+SKU: SKU-DELL-PRECISION-5550-I9-G10-T-16
+Name: precision 5550-I9/G10/T2000
+Specs: RAM 16GB, Storage 512 M.2
+  Matched Sales (1):
+    - Sale ID: UnntYLiLQf0xFJfUyVrXq, Date: 2026-05-22, PurchasePrice: 26000, SellingPrice: 29100
+  Matched Online Orders (1):
+    - Order #: C2A-ON-20260522-0053, Status: shipped, Price in Order: undefined
+----------------------------------
+
+Product ID: K_Up6eXcQuFx8FfhAVBb4
+SKU: SKU-DELL-PRECISION-5560-17
+Name: Precision 5560
+Specs: RAM 16GB, Storage 512 M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: 0nmZyFKxP5iP1iYJZBlmm
+SKU: SKU-DELL-PRECISION-5520-XEON-E3--18
+Name: Precision 5520-XEON E3-1505M
+Specs: RAM 16GB, Storage 512 M.2
+  No matched sales found.
+  No matched online orders found.
+----------------------------------
+
+Product ID: BGkAxwBrhpbC22Zo8-xBS
+SKU: SKU-DELL-PRECISION-5550-TOUCH-19
+Name: Precision 5550 TOUCH
+Specs: RAM 16GB, Storage 512 M.2
+  Matched Sales (1):
+    - Sale ID: UnntYLiLQf0xFJfUyVrXq, Date: 2026-05-22, PurchasePrice: 26000, SellingPrice: 29100
+  Matched Online Orders (1):
+    - Order #: C2A-ON-20260522-0053, Status: shipped, Price in Order: undefined
+----------------------------------
+
+Product ID: KCmg5L_oh_w5DZLerl91y
+SKU: SKU-DELL-PRECISION-5540-20
+Name: Precision 5540
+Specs: RAM 16GB, Storage 512 M.2
+  Matched Sales (5):
+    - Sale ID: oEV_CcBTLK59QHhVNmxM5, Date: 2026-05-22, PurchasePrice: 22500, SellingPrice: 25600
+    - Sale ID: AKGMFe6cgGWaVRIpPoZu-, Date: 2026-05-22, PurchasePrice: 22500, SellingPrice: 25600
+    - Sale ID: yULbmLxAde56kNz-StT1C, Date: 2026-05-22, PurchasePrice: 22500, SellingPrice: 25600
+    - Sale ID: NOay_YT7bvUoGhWVAB48f, Date: 2026-05-22, PurchasePrice: 22500, SellingPrice: 25600
+    - Sale ID: lU7v31H9HltbZbbyNpQnN, Date: 2026-05-22, PurchasePrice: 22500, SellingPrice: 25600
+  Matched Online Orders (5):
+    - Order #: C2A-ON-20260522-0039, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0038, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0037, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0036, Status: pending, Price in Order: undefined
+    - Order #: C2A-ON-20260522-0035, Status: pending, Price in Order: undefined
+----------------------------------

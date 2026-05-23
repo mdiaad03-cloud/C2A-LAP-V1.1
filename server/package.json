@@ -1,0 +1,38 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Proprietary backend for the C2A LAP sales and storefront platform.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed-passwords": "node src/scripts/printSeedHashes.js"
+  },
+  "keywords": [],
+  "author": "Mohamed Diaa El Deen Samy (Freelancer)",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.16.1",
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "lowdb": "^7.0.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.0",
+    "nanoid": "^5.1.6",
+    "nodemailer": "^6.10.1",
+    "pdfkit": "^0.17.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

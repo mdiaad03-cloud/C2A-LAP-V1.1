@@ -1,0 +1,21 @@
+export function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    email: user.email || "",
+    phone: user.phone || "",
+    country: user.country || "",
+    address: user.address || "",
+    city: user.city || "",
+    gender: user.gender || "",
+    birthDate: user.birthDate || "",
+    avatarUrl: user.avatarUrl || "",
+    role: user.role,
+    authProvider: user.authProvider || "local",
+    isActive: user.isActive,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    lastLoginAt: user.lastLoginAt,
+  };
+}

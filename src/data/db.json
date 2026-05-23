@@ -1,0 +1,190 @@
+{
+  "meta": {
+    "app": "C2A LAP Sales Management",
+    "createdAt": "2026-05-23T04:17:16.074Z",
+    "updatedAt": "2026-05-23T04:24:26.742Z"
+  },
+  "users": [
+    {
+      "id": "u_admin_mdiaa",
+      "name": "Mohamed Diaa",
+      "username": "mdiaad03",
+      "passwordHash": "$2b$10$fgTn4FBUcc/LM3mzQoM2HutW1xtfu.QTfyXvRn1.uFkCYAPO49oFu",
+      "role": "admin",
+      "isActive": true,
+      "createdAt": "2026-05-23T04:17:16.931Z",
+      "updatedAt": "2026-05-23T04:17:16.931Z",
+      "lastLoginAt": null
+    },
+    {
+      "id": "u_sales_metwally",
+      "name": "Metwally",
+      "username": "metwally",
+      "passwordHash": "$2b$10$Zu4/sZKvTQkaLiiBJSUZAu/1azDBmnQlD/l4hpYoBZ4aWng6LgL/.",
+      "role": "sales",
+      "isActive": true,
+      "createdAt": "2026-05-23T04:17:16.990Z",
+      "updatedAt": "2026-05-23T04:17:16.990Z",
+      "lastLoginAt": null
+    },
+    {
+      "id": "u_sales_araby",
+      "name": "Araby",
+      "username": "Araby",
+      "passwordHash": "$2b$10$PSi/hOR66JZ1WMA27mIOyu4LIhYr9boeJa84PDdq7EJlhbprLAYw2",
+      "role": "sales",
+      "isActive": true,
+      "createdAt": "2026-05-23T04:17:17.048Z",
+      "updatedAt": "2026-05-23T04:17:17.048Z",
+      "lastLoginAt": null
+    }
+  ],
+  "sales": [],
+  "contacts": [],
+  "products": [],
+  "onlineOrders": [],
+  "supportTickets": [],
+  "storeSettings": {
+    "shippingFlatRate": 25,
+    "freeShippingThreshold": 2000,
+    "lowStockThreshold": 3,
+    "categories": [
+      "Gaming",
+      "Business",
+      "Student",
+      "Ultrabook"
+    ],
+    "content": {
+      "heroBadge": "C2A LAP E-commerce",
+      "heroBadgeAr": "متجر C2A LAP",
+      "heroTitle": "Premium laptops, synchronized with real-time inventory.",
+      "heroTitleAr": "لابتوبات احترافية مرتبطة بالمخزون لحظيًا.",
+      "heroSubtitle": "Browse powerful devices, place orders instantly, and track every purchase through secure checkout.",
+      "heroSubtitleAr": "تصفح أجهزة قوية، اطلب مباشرة، وتابع كل عملية شراء عبر دفع آمن.",
+      "primaryCtaLabel": "Shop Laptops",
+      "primaryCtaLabelAr": "تسوق اللابتوبات",
+      "secondaryCtaLabel": "Go To Cart",
+      "secondaryCtaLabelAr": "اذهب إلى السلة",
+      "featuredTitle": "Featured Laptops",
+      "featuredTitleAr": "منتجات مميزة",
+      "offersTitle": "Best Offers",
+      "offersTitleAr": "أفضل العروض",
+      "offersSubtitle": "Hand-picked discounted devices with instant checkout.",
+      "offersSubtitleAr": "أجهزة مخفضة مختارة مع شراء سريع وآمن.",
+      "brandsTitle": "Popular Brands",
+      "brandsTitleAr": "أشهر الماركات",
+      "faqTitle": "Frequently Asked Questions",
+      "faqTitleAr": "الأسئلة الشائعة",
+      "faqSubtitle": "Answers for the most common customer questions.",
+      "faqSubtitleAr": "إجابات لأكثر الأسئلة شيوعًا لدى العملاء.",
+      "faqItems": [
+        {
+          "id": "01",
+          "question": "Do you offer installment plans?",
+          "questionAr": "هل توفرون أنظمة تقسيط؟",
+          "answer": "Yes. Payment plans depend on the available bank or finance provider at the time of purchase.",
+          "answerAr": "نعم، خيارات التقسيط تعتمد على البنك أو شركة التمويل المتاحة وقت الشراء."
+        },
+        {
+          "id": "02",
+          "question": "Do you have a physical showroom?",
+          "questionAr": "هل لديكم معرض فعلي؟",
+          "answer": "Yes. You can order online at any time and visit our showroom during business hours when needed.",
+          "answerAr": "نعم. يمكنك الطلب أونلاين في أي وقت وزيارة المعرض خلال ساعات العمل عند الحاجة."
+        },
+        {
+          "id": "03",
+          "question": "What about warranty coverage?",
+          "questionAr": "ماذا عن الضمان؟",
+          "answer": "Every product includes the warranty period shown on its page, and the admin team can confirm the start date after delivery.",
+          "answerAr": "كل منتج يشمل مدة الضمان الموضحة في صفحته، ويمكن لفريق الإدارة تأكيد بداية الضمان بعد التسليم."
+        },
+        {
+          "id": "04",
+          "question": "How long does shipping take?",
+          "questionAr": "كم تستغرق مدة التوصيل؟",
+          "answer": "Delivery time depends on the destination city and the selected shipping company, usually within 1-5 business days.",
+          "answerAr": "مدة التوصيل تعتمد على المدينة وشركة الشحن المختارة، وعادة تكون خلال 1-5 أيام عمل."
+        }
+      ]
+    },
+    "features": {
+      "reviewsEnabled": true
+    },
+    "socialLinks": {
+      "whatsapp": {
+        "enabled": false,
+        "url": ""
+      },
+      "facebook": {
+        "enabled": false,
+        "url": ""
+      },
+      "instagram": {
+        "enabled": false,
+        "url": ""
+      },
+      "tiktok": {
+        "enabled": false,
+        "url": ""
+      }
+    },
+    "agentSettings": {
+      "productDraftEnabled": true,
+      "supportReplyEnabled": true,
+      "shippingAgentEnabled": true,
+      "excelImportEnabled": true,
+      "autoMoveTicketsToInProgress": true,
+      "defaultShippingCompanyName": "Bosta",
+      "defaultShippingStatus": "pickup_requested",
+      "productDescriptionTone": "professional",
+      "supportReplyTone": "friendly",
+      "defaultWarrantyMonths": 12,
+      "priceMarkupEnabled": false,
+      "priceMarkupType": "fixed",
+      "priceMarkupValue": 0
+    }
+  },
+  "shippingCompanies": [
+    {
+      "id": "ship_1",
+      "name": "Fast Egypt Express",
+      "phone": "+20-100-000-0000",
+      "notes": "Default shipping partner",
+      "createdAt": "2026-05-23T04:17:17.048Z",
+      "updatedAt": "2026-05-23T04:17:17.048Z"
+    },
+    {
+      "id": "ship_2",
+      "name": "Nile Logistics",
+      "phone": "+20-101-111-1111",
+      "notes": "Secondary carrier",
+      "createdAt": "2026-05-23T04:17:17.048Z",
+      "updatedAt": "2026-05-23T04:17:17.048Z"
+    }
+  ],
+  "logs": [
+    {
+      "id": "4V6noaaNtjQxI8kqEfo8I",
+      "action": "fetch_images",
+      "module": "agent",
+      "userId": "system",
+      "username": "ai_image_fetcher",
+      "details": "Fetched images for Dell Latitude 5490: thumbnail=https://ict-direct.co.uk/wp-content/uploads/2023/04/Dell-Lat... and 4 gallery images.",
+      "ip": "",
+      "timestamp": "2026-05-23T04:24:26.742Z"
+    },
+    {
+      "id": "n48RD8dsGHQQCE2ra4W7e",
+      "action": "fetch_images",
+      "module": "agent",
+      "userId": "system",
+      "username": "ai_image_fetcher",
+      "details": "Fetched images for Dell Latitude 5490: thumbnail=https://ict-direct.co.uk/wp-content/uploads/2023/04/Dell-Lat... and 4 gallery images.",
+      "ip": "",
+      "timestamp": "2026-05-23T04:17:17.050Z"
+    }
+  ],
+  "notifications": [],
+  "coupons": []
+}

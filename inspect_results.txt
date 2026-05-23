@@ -1,0 +1,9 @@
+Line 294: function StoreAdaptiveImage({ src, alt, className = "", profile = "default" }) {
+Line 1273: <StoreAdaptiveImage src={image} alt={localizedProduct.displayName} className="store-product-image" profile="card" />
+Line 1510: <StoreAdaptiveImage
+Line 1612: <StoreAdaptiveImage src={productImages(localizedSpotlight)[0]} alt={localizedSpotlight.displayName} profile="card" />
+Line 1637: <StoreAdaptiveImage src={productImages(product)[0]} alt={product.displayName} profile="compact" />
+Line 1665: <StoreAdaptiveImage src={productImages(product)[0]} alt={product.displayName} profile="card" />
+Line 2201: <StoreAdaptiveImage src={selected} alt={localizedDetail.displayName} className="store-detail-main-image" profile="detail" />
+Line 2216: <StoreAdaptiveImage src={image} alt={`${localizedDetail.displayName} ${index + 1}`} profile="compact" />
+Line 2420: <StoreAdaptiveImage src={productImages(localizedItem)[0]} alt={localizedItem.displayName} profile="compact" />
