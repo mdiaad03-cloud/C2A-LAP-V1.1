@@ -5,6 +5,5 @@ client/dist/
 server/uploads/
 server/temp/
 server/exports/
-server/src/data/db.json
 .env
 server/.env
