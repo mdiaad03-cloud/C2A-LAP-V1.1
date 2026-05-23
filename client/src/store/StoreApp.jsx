@@ -3912,13 +3912,8 @@ function StoreAccountPage() {
           >
             {mode === "register" ? tr("Already have account? Login", "\u0644\u062f\u064a\u0643 \u062d\u0633\u0627\u0628 \u0628\u0627\u0644\u0641\u0639\u0644\u061f \u0633\u062c\u0644 \u062f\u062e\u0648\u0644") : tr("Create new account", "\u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628 \u062c\u062f\u064a\u062f")}
           </button>
-          {/* Commented out temporarily
           <a className="store-secondary-btn span-2" href={googleLink}>
             {tr("Continue with Google", "\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u062d\u0633\u0627\u0628 Google")}
-          </a>
-          */}
-          <a className="store-secondary-btn span-2" href={facebookLink}>
-            {tr("Continue with Facebook", "\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u062d\u0633\u0627\u0628 Facebook")}
           </a>
         </form>
       )}
