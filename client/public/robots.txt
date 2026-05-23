@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://c2a-lap-v11-production.up.railway.app/sitemap.xml
