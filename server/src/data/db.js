@@ -259,12 +259,24 @@ export async function getDb() {
   return db.data;
 }
 
+let writeQueue = Promise.resolve();
+
 export async function saveDb() {
   if (!dbInstance) {
     await initializeDb();
   }
   dbInstance.data.meta.updatedAt = nowIso();
-  await dbInstance.write();
+  
+  writeQueue = writeQueue.then(async () => {
+    try {
+      await dbInstance.write();
+    } catch (error) {
+      console.error("Database save failed:", error);
+      throw error;
+    }
+  });
+
+  return writeQueue;
 }
 
 export async function getRawDbPath() {

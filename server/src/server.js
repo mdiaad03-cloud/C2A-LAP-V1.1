@@ -132,6 +132,7 @@ app.use(
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many login attempts. Try again later." },
+    skip: () => env.disableRateLimits,
   }),
 );
 
@@ -143,6 +144,7 @@ app.post(
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many checkout attempts. Please try again shortly." },
+    skip: () => env.disableRateLimits,
   }),
 );
 
@@ -154,6 +156,7 @@ app.use(
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many authentication attempts. Try again later." },
+    skip: () => env.disableRateLimits,
   }),
 );
 
@@ -165,6 +168,7 @@ app.post(
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many support requests. Please wait and try again." },
+    skip: () => env.disableRateLimits,
   }),
 );
 
@@ -176,6 +180,7 @@ app.post(
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many review attempts. Try again later." },
+    skip: () => env.disableRateLimits,
   }),
 );
 
@@ -187,6 +192,7 @@ app.use(
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {
+      if (env.disableRateLimits) return true;
       // Skip rate limit for authenticated admin/staff dashboard requests
       const auth = req.headers.authorization || "";
       return auth.startsWith("Bearer ");
