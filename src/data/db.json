@@ -2,7 +2,7 @@
   "meta": {
     "app": "C2A LAP Sales Management",
     "createdAt": "2026-05-23T04:17:16.074Z",
-    "updatedAt": "2026-05-23T04:24:26.742Z"
+    "updatedAt": "2026-05-23T22:50:18.093Z"
   },
   "users": [
     {
@@ -186,5 +186,18 @@
     }
   ],
   "notifications": [],
-  "coupons": []
+  "coupons": [
+    {
+      "id": "FFE1_sukn6sQ_v-LuR7I3",
+      "code": "FIRST200",
+      "type": "fixed",
+      "value": 200,
+      "usageLimit": 0,
+      "usageCount": 0,
+      "isActive": true,
+      "createdAt": "2026-05-23T22:50:07.495Z",
+      "updatedAt": "2026-05-23T22:50:07.495Z",
+      "isFirstOrderOnly": true
+    }
+  ]
 }

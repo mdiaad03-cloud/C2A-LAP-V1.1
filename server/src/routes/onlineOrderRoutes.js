@@ -5,6 +5,7 @@ import { authenticate, authorize, csrfProtect } from "../middleware/auth.js";
 import { getDb, saveDb } from "../data/db.js";
 import { addLog } from "../services/logService.js";
 import { sendOrderStatusEmail } from "../services/emailService.js";
+import { sendOrderStatusMessage } from "../services/whatsappService.js";
 import {
   ORDER_STATUSES,
   buildOnlineOrderAnalytics,
@@ -118,19 +119,22 @@ router.put(
       order.statusHistory ||= [];
       order.statusHistory.unshift(buildOrderStatusHistory(requestedStatus, req.user));
 
-      if (requestedStatus === ORDER_STATUSES.confirmed) {
-        assignedEmployee ||= await resolveAssignedEmployee(db, order.assignedEmployeeId);
-        order.assignedEmployeeId = assignedEmployee.id;
-        order.assignedEmployeeName = assignedEmployee.name;
+      const needsConfirmation = [ORDER_STATUSES.confirmed, ORDER_STATUSES.shipped, ORDER_STATUSES.delivered].includes(requestedStatus);
+      if (needsConfirmation) {
+        if (!order.confirmedAt || !Array.isArray(order.saleIds) || order.saleIds.length === 0) {
+          assignedEmployee ||= await resolveAssignedEmployee(db, order.assignedEmployeeId);
+          order.assignedEmployeeId = assignedEmployee.id;
+          order.assignedEmployeeName = assignedEmployee.name;
 
-        if (!Array.isArray(order.saleIds) || order.saleIds.length === 0) {
-          const salesEntries = createSalesFromOnlineOrder(db, order, assignedEmployee);
-          order.saleIds = salesEntries.map((entry) => entry.id);
-          salesChanged = salesEntries.length > 0;
-        } else {
-          syncLinkedSalesMetadata = true;
+          if (!Array.isArray(order.saleIds) || order.saleIds.length === 0) {
+            const salesEntries = createSalesFromOnlineOrder(db, order, assignedEmployee);
+            order.saleIds = salesEntries.map((entry) => entry.id);
+            salesChanged = salesEntries.length > 0;
+          } else {
+            syncLinkedSalesMetadata = true;
+          }
+          order.confirmedAt = order.confirmedAt || nowIso();
         }
-        order.confirmedAt = order.confirmedAt || nowIso();
       }
 
       if (requestedStatus === ORDER_STATUSES.shipped) {
@@ -200,6 +204,12 @@ router.put(
         }
       } catch (mailError) {
         console.error(`Order status email failed for ${order.orderNumber}:`, mailError);
+      }
+
+      try {
+        await sendOrderStatusMessage(order, previousStatus);
+      } catch (whatsappError) {
+        console.error(`WhatsApp status message failed for ${order.orderNumber}:`, whatsappError);
       }
     }
 

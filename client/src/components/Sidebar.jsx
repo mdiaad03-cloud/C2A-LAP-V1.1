@@ -1,5 +1,6 @@
 import { motion as Motion } from "framer-motion";
 import clsx from "clsx";
+import { X } from "lucide-react";
 
 function getInitials(name) {
   const parts = String(name || "")
@@ -23,12 +24,18 @@ function UserAvatar({ name, avatarUrl }) {
   );
 }
 
-export default function Sidebar({ items, activeTab, onSelect, user, lang = "en" }) {
+export default function Sidebar({ items, activeTab, onSelect, user, lang = "en", isOpen, onClose }) {
   const isArabic = lang === "ar";
   const tr = (en, ar) => (isArabic ? ar : en);
 
   return (
-    <aside className="sidebar">
+    <aside className={clsx("sidebar", isOpen && "open")}>
+      <div className="sidebar-close-row">
+        <button type="button" className="sidebar-close-btn" onClick={onClose} aria-label={tr("Close Menu", "إغلاق القائمة")}>
+          <X size={20} />
+        </button>
+      </div>
+
       <div className="brand-block">
         <p className="brand-tag">C2A LAP</p>
         <h2>{tr("Sales Management", "إدارة المبيعات")}</h2>

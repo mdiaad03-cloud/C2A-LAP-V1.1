@@ -14,11 +14,28 @@ export const ORDER_STATUSES = {
 };
 
 const TRANSITIONS = {
-  [ORDER_STATUSES.pending]: [ORDER_STATUSES.confirmed, ORDER_STATUSES.cancelled],
-  [ORDER_STATUSES.confirmed]: [ORDER_STATUSES.shipped, ORDER_STATUSES.delivered, ORDER_STATUSES.cancelled],
-  [ORDER_STATUSES.shipped]: [ORDER_STATUSES.delivered, ORDER_STATUSES.cancelled],
-  [ORDER_STATUSES.delivered]: [],
-  [ORDER_STATUSES.cancelled]: [],
+  [ORDER_STATUSES.pending]: [
+    ORDER_STATUSES.confirmed,
+    ORDER_STATUSES.shipped,
+    ORDER_STATUSES.delivered,
+    ORDER_STATUSES.cancelled,
+  ],
+  [ORDER_STATUSES.confirmed]: [
+    ORDER_STATUSES.shipped,
+    ORDER_STATUSES.delivered,
+    ORDER_STATUSES.cancelled,
+  ],
+  [ORDER_STATUSES.shipped]: [
+    ORDER_STATUSES.delivered,
+    ORDER_STATUSES.cancelled,
+  ],
+  [ORDER_STATUSES.delivered]: [
+    ORDER_STATUSES.cancelled,
+  ],
+  [ORDER_STATUSES.cancelled]: [
+    ORDER_STATUSES.pending,
+    ORDER_STATUSES.confirmed,
+  ],
 };
 
 const ONLINE_EMPLOYEE_ID = "u_sales_online_store";

@@ -12,6 +12,7 @@ import {
   MoonStar,
   Plus,
   ShoppingBag,
+  MapPin,
   Star,
   Sun,
   Trash2,
@@ -29,6 +30,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
+  useSearchParams,
 } from "react-router-dom";
 import { formatDateTime, number } from "../utils/format";
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "../components/socialIcons";
@@ -2721,6 +2723,61 @@ function StoreCheckoutPage() {
     country: countryFromCurrency(currency) || "EG",
   });
 
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  function handleLocateMe() {
+    if (!navigator.geolocation) {
+      toast.error(tr("Geolocation is not supported by your browser.", "تحديد الموقع الجغرافي غير مدعوم في متصفحك."));
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${isArabic ? "ar" : "en"}`
+          );
+          const data = await response.json();
+          if (data && data.address) {
+            const addrInfo = data.address;
+            const road = addrInfo.road || addrInfo.suburb || addrInfo.neighbourhood || addrInfo.village || "";
+            const city = addrInfo.city || addrInfo.town || addrInfo.village || addrInfo.governorate || addrInfo.state || "";
+            
+            let detailAddress = [road, addrInfo.suburb, addrInfo.neighbourhood].filter(Boolean).join(", ");
+            if (!detailAddress && data.display_name) {
+              detailAddress = data.display_name;
+            }
+
+            setNewAddress((prev) => ({
+              ...prev,
+              city: city || prev.city,
+              address: detailAddress || prev.address,
+            }));
+            
+            toast.success(tr("Location auto-filled successfully!", "تم تحديد موقعك وملء البيانات تلقائياً!"));
+          } else {
+            toast.error(tr("Could not resolve address from coordinates.", "تعذر تحديد العنوان من الإحداثيات."));
+          }
+        } catch (error) {
+          console.error("GPS Reverse Geocoding Error:", error);
+          toast.error(tr("Error loading location details.", "حدث خطأ أثناء تحميل تفاصيل الموقع."));
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      (error) => {
+        setGpsLoading(false);
+        let msg = tr("Unable to retrieve location.", "تعذر تحديد موقعك الجغرافي.");
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = tr("Location permission denied.", "تم رفض إذن الوصول للموقع.");
+        }
+        toast.error(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
   if (cartItems.length === 0) {
     return <Navigate to="/store/cart" replace />;
   }
@@ -2868,7 +2925,19 @@ function StoreCheckoutPage() {
 
           {selectedAddressId === "new" && (
             <div className="span-2" style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px", border: "1px solid var(--line)", padding: "16px", borderRadius: "12px", background: "var(--panel-active, rgba(0,0,0,0.02))", marginTop: "5px" }}>
-              <h5 style={{ margin: 0 }}>{tr("New Address details", "تفاصيل العنوان الجديد")}</h5>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                <h5 style={{ margin: 0 }}>{tr("New Address details", "تفاصيل العنوان الجديد")}</h5>
+                <button
+                  type="button"
+                  className="store-secondary-btn"
+                  onClick={handleLocateMe}
+                  disabled={gpsLoading}
+                  style={{ padding: "4px 10px", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: "6px", minHeight: "auto" }}
+                >
+                  <MapPin size={12} />
+                  <span>{gpsLoading ? tr("Locating...", "جاري التحديد...") : tr("Use GPS Location", "تحديد موقعي التلقائي 📍")}</span>
+                </button>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
                 <label>
                   {tr("Address Label (e.g. Home, Work)", "اسم للعنوان (مثال: البيت، العمل)")}
@@ -3843,9 +3912,11 @@ function StoreAccountPage() {
           >
             {mode === "register" ? tr("Already have account? Login", "\u0644\u062f\u064a\u0643 \u062d\u0633\u0627\u0628 \u0628\u0627\u0644\u0641\u0639\u0644\u061f \u0633\u062c\u0644 \u062f\u062e\u0648\u0644") : tr("Create new account", "\u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628 \u062c\u062f\u064a\u062f")}
           </button>
+          {/* Commented out temporarily
           <a className="store-secondary-btn span-2" href={googleLink}>
             {tr("Continue with Google", "\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u062d\u0633\u0627\u0628 Google")}
           </a>
+          */}
           <a className="store-secondary-btn span-2" href={facebookLink}>
             {tr("Continue with Facebook", "\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u062d\u0633\u0627\u0628 Facebook")}
           </a>
@@ -4226,6 +4297,83 @@ function StoreSuccessPage() {
   );
 }
 
+function StoreConfirmOrderPage() {
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("id");
+  const { tr } = useStore();
+  const [status, setStatus] = useState("loading"); // loading, success, error
+  const [errorMessage, setErrorMessage] = useState("");
+  const [orderInfo, setOrderInfo] = useState(null);
+
+  useEffect(() => {
+    if (!orderId) {
+      setStatus("error");
+      setErrorMessage(tr("Missing order identification parameter.", "معلمة تحديد الطلب مفقودة."));
+      return;
+    }
+
+    async function confirmOrder() {
+      try {
+        const response = await axios.post(`/api/whatsapp/confirm-link/${orderId}`);
+        if (response.data?.success) {
+          setStatus("success");
+          setOrderInfo(response.data.order);
+        } else {
+          setStatus("error");
+          setErrorMessage(response.data?.error || tr("Failed to confirm order.", "فشل تأكيد الطلب."));
+        }
+      } catch (err) {
+        setStatus("error");
+        setErrorMessage(
+          err.response?.data?.error || tr("An unexpected error occurred during confirmation.", "حدث خطأ غير متوقع أثناء التأكيد.")
+        );
+      }
+    }
+
+    confirmOrder();
+  }, [orderId, tr]);
+
+  return (
+    <section className="store-hero-section" style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
+      <div className="store-hero-card" style={{ maxWidth: "480px", width: "100%", textAlign: "center", padding: "32px 24px" }}>
+        {status === "loading" && (
+          <div style={{ display: "grid", gap: "16px" }}>
+            <div className="store-loading-spinner" style={{ margin: "0 auto", width: "40px", height: "40px" }} />
+            <h3>{tr("Confirming Your Order...", "جاري تأكيد طلبك...")}</h3>
+            <p style={{ color: "var(--muted)" }}>{tr("Please wait while we update your order status.", "يرجى الانتظار حتى نقوم بتحديث حالة طلبك.")}</p>
+          </div>
+        )}
+
+        {status === "success" && (
+          <div style={{ display: "grid", gap: "16px" }}>
+            <div style={{ margin: "0 auto", width: "64px", height: "64px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.1)", color: "#10b981", display: "grid", placeItems: "center" }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3 style={{ color: "#10b981" }}>{tr("Order Confirmed!", "تم تأكيد طلبك بنجاح!")}</h3>
+            <p>{tr(`Thank you, ${orderInfo?.customerName || ""}. Your order #${orderInfo?.orderNumber || ""} is now confirmed and sent for shipping preparation.`, `شكراً لك يا ${orderInfo?.customerName || ""}. تم تأكيد طلبك رقم #${orderInfo?.orderNumber || ""} وجاري تجهيز الشحن.`)}</p>
+            <div className="store-hero-actions" style={{ justifyContent: "center", marginTop: "16px" }}>
+              <Link to="/store/products" className="store-primary-btn">{tr("Browse Laptops", "تصفح الأجهزة")}</Link>
+            </div>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div style={{ display: "grid", gap: "16px" }}>
+            <div style={{ margin: "0 auto", width: "64px", height: "64px", borderRadius: "50%", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", display: "grid", placeItems: "center" }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+            <h3 style={{ color: "#ef4444" }}>{tr("Confirmation Failed", "فشل تأكيد الطلب")}</h3>
+            <p style={{ color: "var(--muted)" }}>{errorMessage}</p>
+            <div className="store-hero-actions" style={{ justifyContent: "center", marginTop: "16px" }}>
+              <Link to="/store/support" className="store-primary-btn">{tr("Contact Support", "تواصل مع الدعم")}</Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function StoreShell() {
   const { theme } = useStore();
   return (
@@ -4256,6 +4404,7 @@ function StoreShell() {
           <Route path="support" element={<StoreSupportPage />} />
           <Route path="account" element={<StoreAccountPage />} />
           <Route path="auth/callback" element={<StoreSocialCallbackPage />} />
+          <Route path="confirm-order" element={<StoreConfirmOrderPage />} />
           <Route path="success/:orderNumber" element={<StoreSuccessPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/store" replace />} />

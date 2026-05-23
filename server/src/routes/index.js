@@ -17,6 +17,7 @@ import supportRoutes from "./supportRoutes.js";
 import storeSettingsRoutes from "./storeSettingsRoutes.js";
 import agentRoutes from "./agentRoutes.js";
 import couponRoutes from "./couponRoutes.js";
+import whatsappRoutes from "./whatsappRoutes.js";
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use("/support", supportRoutes);
 router.use("/store-settings", storeSettingsRoutes);
 router.use("/agent", agentRoutes);
 router.use("/coupons", couponRoutes);
+router.use("/whatsapp", whatsappRoutes);
 
 export default router;

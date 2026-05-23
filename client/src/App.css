@@ -1195,9 +1195,26 @@ html[dir="rtl"] .support-messages div {
     align-items: flex-start;
   }
 
-  .side-nav,
-  .kpi-grid {
+  .side-nav {
     grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .kpi-card {
+    padding: 10px !important;
+  }
+
+  .kpi-card h3 {
+    font-size: 1.05rem !important;
+    margin: 6px 0 4px !important;
+  }
+
+  .kpi-card span {
+    font-size: 0.7rem !important;
   }
 
   .notif-pill {
@@ -1281,5 +1298,127 @@ html[dir="rtl"] .support-messages div {
 html[dir="rtl"] .manage-image-card .remove-btn {
   right: auto;
   left: 3px;
+}
+
+/* ---------------------------------------------------- */
+/* Premium Mobile Drawer Sidebar & Scrollbar CSS */
+/* ---------------------------------------------------- */
+
+.sidebar-toggle-btn {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  margin-inline-end: 8px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 122, 24, 0.1);
+  border-color: rgba(255, 122, 24, 0.2);
+}
+
+.sidebar-close-row {
+  display: none;
+  justify-content: flex-end;
+  margin-bottom: -6px;
+}
+
+.sidebar-close-btn {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(255, 122, 24, 0.1);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Custom scrollbar for premium touch */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+@media (max-width: 1024px) {
+  .sidebar-toggle-btn {
+    display: flex;
+  }
+
+  .sidebar-close-row {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 290px;
+    z-index: 100;
+    border-radius: 0 24px 24px 0;
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.15);
+    background: var(--surface);
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  html[dir="rtl"] .sidebar {
+    left: auto;
+    right: 0;
+    border-radius: 24px 0 0 24px;
+    transform: translateX(100%);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+  }
+
+  html[dir="rtl"] .sidebar.open {
+    transform: translateX(0);
+  }
 }
 

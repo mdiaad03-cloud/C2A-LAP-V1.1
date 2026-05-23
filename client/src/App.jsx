@@ -32,6 +32,7 @@ import SupportSection from "./sections/SupportSection";
 import StoreSettingsSection from "./sections/StoreSettingsSection";
 import AgentSection from "./sections/AgentSection";
 import CouponsSection from "./sections/CouponsSection";
+import WhatsappBotSection from "./sections/WhatsappBotSection";
 import "./App.css";
 
 const THEME_KEY = "c2a_lap_theme_v1";
@@ -124,6 +125,7 @@ export default function App() {
   const [lang, setLang] = useState(() => readAdminLanguage());
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isArabic = lang === "ar";
   const tr = (en, ar) => (isArabic ? ar : en);
   const isAdmin = user?.role === "admin";
@@ -214,6 +216,7 @@ export default function App() {
       base.push({ key: "agent", label: tr("Agent", "\u0627\u0644\u0625\u062c\u0646\u062a"), icon: Bot });
       base.push({ key: "storeSettings", label: tr("Store Settings", "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631"), icon: Settings });
       base.push({ key: "support", label: tr("Support", "\u0627\u0644\u062f\u0639\u0645"), icon: MessageCircle });
+      base.push({ key: "whatsapp", label: tr("WhatsApp Bot", "بوابة واتساب"), icon: MessageCircle });
       base.push({ key: "users", label: tr("Users", "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646"), icon: Users });
       base.push({ key: "logs", label: tr("Logs", "\u0627\u0644\u0633\u062c\u0644\u0627\u062a"), icon: Settings });
     }
@@ -639,7 +642,19 @@ export default function App() {
     <>
       <Toaster position="top-right" />
       <div className="dashboard-layout">
-        <Sidebar items={navItems} activeTab={activeTab} onSelect={setActiveTab} user={user} lang={lang} />
+        {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
+        <Sidebar
+          items={navItems}
+          activeTab={activeTab}
+          onSelect={(tab) => {
+            setActiveTab(tab);
+            setIsSidebarOpen(false);
+          }}
+          user={user}
+          lang={lang}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         <main className="main-content">
           <Topbar
@@ -651,6 +666,7 @@ export default function App() {
             onLogout={logout}
             notifications={notifications}
             loading={loading}
+            onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           />
 
           <Motion.div
@@ -815,6 +831,7 @@ export default function App() {
               />
             ) : null}
 
+            {activeTab === "whatsapp" && isAdmin ? <WhatsappBotSection lang={lang} /> : null}
             {activeTab === "logs" && isAdmin ? <LogsSection logs={logs} lang={lang} /> : null}
           </Motion.div>
         </main>

@@ -17,6 +17,7 @@ import {
 } from "../services/onlineOrderService.js";
 import { sendOrderPlacedEmail } from "../services/emailService.js";
 import { syncSalesWorkbook } from "../services/excelAutoSaveService.js";
+import { sendOrderConfirmationMessage } from "../services/whatsappService.js";
 import { nowIso } from "../utils/dateUtils.js";
 import { verifyAuthToken } from "../utils/jwt.js";
 import { requireText } from "../utils/validation.js";
@@ -327,14 +328,19 @@ router.post(
   authorize("customer"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
+    const customerAccount = await resolveCheckoutCustomer(req, db);
+    const customerPayload = {
+      ...req.body.customer,
+      id: customerAccount?.id,
+      email: customerAccount?.email || req.body.customer?.email
+    };
     const payload = buildOrderPayload({
       db,
       items: req.body.items,
-      customer: req.body.customer,
+      customer: customerPayload,
       paymentMethod: req.body.paymentMethod,
       discountCode: req.body.discountCode,
     });
-    const customerAccount = await resolveCheckoutCustomer(req, db);
 
     if (customerAccount) {
       if (payload.customerName && payload.customerName !== customerAccount.name) {
@@ -427,6 +433,13 @@ router.post(
     await saveDb();
     await syncSalesExcelSafe(db.sales);
 
+    // Send WhatsApp order confirmation prompt
+    try {
+      await sendOrderConfirmationMessage(order);
+    } catch (whatsappError) {
+      console.error(`WhatsApp confirmation message failed for ${order.orderNumber}:`, whatsappError);
+    }
+
     try {
       const mailResult = await sendOrderPlacedEmail({ order });
       if (!mailResult?.sent) {
@@ -443,7 +456,7 @@ router.post(
       details: `Checkout completed for ${order.orderNumber} (${order.saleIds.length} sales records)`,
       ip: req.ip,
     });
-    if (payload.paymentMethod === "paymob") {
+    if (payload.paymentMethod === "paymob" || payload.paymentMethod === "paymob_egypt") {
 
       const paymobResult = await createPaymobPayment({
         amount: order.total,

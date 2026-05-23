@@ -51,6 +51,16 @@ function orderStatusLabel(status) {
   })[String(status || "").toLowerCase()] || String(status || "Updated");
 }
 
+function orderStatusLabelAr(status) {
+  return ({
+    pending: "قيد الانتظار (Pending)",
+    confirmed: "تم التأكيد (Confirmed)",
+    shipped: "تم الشحن (Shipped)",
+    delivered: "تم التسليم (Delivered)",
+    cancelled: "ملغي (Cancelled)",
+  })[String(status || "").toLowerCase()] || String(status || "تم التحديث");
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -99,16 +109,19 @@ function renderMailShell({ eyebrow, title, intro, body, footerNote }) {
 }
 
 function renderOrderMeta({ order, currency, previousStatus }) {
+  const paymentMethodAr = order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام (Cash on delivery)" : "باي موب (Paymob)";
+  const destinationStr = [order.customerAddress, order.customerCity].filter(Boolean).join(", ") || "To be confirmed / سيتم التأكيد";
+  
   const rows = [
-    ["Order number", order.orderNumber],
-    ["Status", orderStatusLabel(order.status)],
-    previousStatus ? ["Previous status", orderStatusLabel(previousStatus)] : null,
-    ["Total", money(order.total, currency)],
-    ["Payment", order.paymentMethod || "Cash on delivery"],
-    ["Destination", [order.customerAddress, order.customerCity].filter(Boolean).join(", ") || "To be confirmed"],
-    order.shippingCompanyName ? ["Shipping company", order.shippingCompanyName] : null,
-    order.trackingNumber ? ["Tracking number", order.trackingNumber] : null,
-    order.shippingStatus ? ["Shipping update", order.shippingStatus] : null,
+    ["Order number / رقم الطلب", order.orderNumber],
+    ["Status / حالة الطلب", `${orderStatusLabelAr(order.status)}`],
+    previousStatus ? ["Previous status / الحالة السابقة", `${orderStatusLabelAr(previousStatus)}`] : null,
+    ["Total / الإجمالي", money(order.total, currency)],
+    ["Payment / الدفع", paymentMethodAr],
+    ["Destination / العنوان", destinationStr],
+    order.shippingCompanyName ? ["Shipping company / شركة الشحن", order.shippingCompanyName] : null,
+    order.trackingNumber ? ["Tracking number / رقم التتبع", order.trackingNumber] : null,
+    order.shippingStatus ? ["Shipping update / تحديث الشحن", order.shippingStatus] : null,
   ].filter(Boolean);
 
   return `
@@ -169,42 +182,43 @@ export async function sendOrderPlacedEmail({ order }) {
   }
 
   const currency = String(order.currency || "EGP").toUpperCase();
-  const subject = `Order Received - ${order.orderNumber}`;
+  const subject = `Order Received / تم استلام طلبك - ${order.orderNumber}`;
   const text = [
     `Hello ${order.customerName},`,
     `Your order ${order.orderNumber} has been received successfully.`,
     `Total: ${money(order.total, currency)}`,
     `Status: ${orderStatusLabel(order.status)}`,
     "",
-    "Thank you for shopping with C2A LAP.",
+    "أهلاً بك، تم استلام طلبك بنجاح وجاري تجهيزه الآن.",
+    "شكراً لتسوقك معنا.",
   ].join("\n");
 
   const html = renderMailShell({
-    eyebrow: "C2A LAP | Order received",
-    title: "Your order is now in our system",
-    intro: `Hello ${order.customerName}, your request was received successfully and is now being prepared by our team.`,
+    eyebrow: "C2A LAP | Order Received / تم استلام طلبك",
+    title: "Order Received / تم استلام الطلب",
+    intro: `Hello ${order.customerName}, your request was received successfully and is now being prepared by our team.<br/><br/>مرحباً ${order.customerName}، تم استلام طلبك بنجاح في نظامنا ويقوم فريقنا الآن بتجهيزه وشحنه.`,
     body: `
       ${renderOrderMeta({ order, currency })}
       <div style="margin:20px 0 0;">
-        <h3 style="margin:0 0 14px;font-size:18px;color:#0f172a;">Order items</h3>
+        <h3 style="margin:0 0 14px;font-size:18px;color:#0f172a;border-bottom: 2px solid #f97316;padding-bottom:6px;">Order Items / محتويات الطلب</h3>
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr>
-              <th style="padding:0 0 10px;text-align:left;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Item</th>
-              <th style="padding:0 0 10px;text-align:center;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Qty</th>
-              <th style="padding:0 0 10px;text-align:right;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Line total</th>
+              <th style="padding:0 0 10px;text-align:left;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Item / المنتج</th>
+              <th style="padding:0 0 10px;text-align:center;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Qty / الكمية</th>
+              <th style="padding:0 0 10px;text-align:right;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;">Line total / الإجمالي</th>
             </tr>
           </thead>
           <tbody>${buildOrderItemsMarkup(order, currency)}</tbody>
         </table>
       </div>
     `,
-    footerNote: "You will receive another message when the order is shipped and once it is marked as delivered.",
+    footerNote: "You will receive another message when the order is shipped and once it is marked as delivered. / ستتلقى رسالة أخرى بمجرد شحن طلبك وتوصيله.",
   });
 
   await transport.sendMail({
     from: env.mailFrom,
-    to: FIXED_RECIPIENT,
+    to: order.customerEmail || FIXED_RECIPIENT,
     subject,
     text,
     html,
@@ -225,12 +239,12 @@ export async function sendOrderStatusEmail({ order, previousStatus }) {
   }
 
   const currency = String(order.currency || "EGP").toUpperCase();
-  const subject = `Order ${orderStatusLabel(status)} - ${order.orderNumber}`;
+  const subject = `Order ${orderStatusLabel(status)} / تحديث الطلب: ${orderStatusLabelAr(status)} - ${order.orderNumber}`;
 
   const shippingDetails = [
-    order.shippingCompanyName ? `Shipping company: ${order.shippingCompanyName}` : "",
-    order.trackingNumber ? `Tracking number: ${order.trackingNumber}` : "",
-    order.shippingStatus ? `Shipping status: ${order.shippingStatus}` : "",
+    order.shippingCompanyName ? `Shipping company / شركة الشحن: ${order.shippingCompanyName}` : "",
+    order.trackingNumber ? `Tracking number / رقم التتبع: ${order.trackingNumber}` : "",
+    order.shippingStatus ? `Shipping status / حالة الشحن: ${order.shippingStatus}` : "",
   ].filter(Boolean);
 
   const text = [
@@ -246,22 +260,22 @@ export async function sendOrderStatusEmail({ order, previousStatus }) {
     .join("\n");
 
   const statusIntro = {
-    confirmed: "Your order has been confirmed and is moving to fulfillment.",
-    shipped: "Your order is now with the shipping company and on its way.",
-    delivered: "Your order has been marked as delivered. We hope everything arrived in perfect condition.",
-    cancelled: "Your order has been cancelled. If this was unexpected, please contact support.",
-  }[status] || "Your order status has been updated.";
+    confirmed: "Your order has been confirmed and is moving to fulfillment.<br/>تم تأكيد طلبك بنجاح وجاري البدء في التجهيز والشحن.",
+    shipped: "Your order is now with the shipping company and on its way.<br/>تم تسليم طلبك لشركة الشحن وهو الآن في الطريق إليك.",
+    delivered: "Your order has been marked as delivered. We hope everything arrived in perfect condition.<br/>تم توصيل طلبك بنجاح. نتمنى أن تنال منتجاتنا رضاكم ونشكرك لثقتك بنا.",
+    cancelled: "Your order has been cancelled. If this was unexpected, please contact support.<br/>تم إلغاء طلبك. إذا كان هذا الإلغاء غير مقصود، يرجى التواصل معنا.",
+  }[status] || "Your order status has been updated. / تم تحديث حالة طلبك.";
 
   const html = renderMailShell({
-    eyebrow: "C2A LAP | Order update",
-    title: `Order ${orderStatusLabel(status)}`,
+    eyebrow: "C2A LAP | Order update / تحديث الطلب",
+    title: `Order ${orderStatusLabel(status)} / ${orderStatusLabelAr(status)}`,
     intro: `Hello ${order.customerName}, ${statusIntro}`,
     body: `
       ${renderOrderMeta({ order, currency, previousStatus })}
       ${
         shippingDetails.length > 0
-          ? `<div style="padding:16px 18px;border:1px solid #e2e8f0;border-radius:18px;background:#f8fafc;">
-              <div style="margin:0 0 10px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">Shipping details</div>
+          ? `<div style="padding:16px 18px;border:1px solid #e2e8f0;border-radius:18px;background:#f8fafc;margin-top:20px;">
+              <div style="margin:0 0 10px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;font-weight:bold;">Shipping details / تفاصيل الشحن</div>
               <ul style="margin:0;padding-left:18px;color:#0f172a;line-height:1.8;">
                 ${shippingDetails.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}
               </ul>
@@ -269,12 +283,12 @@ export async function sendOrderStatusEmail({ order, previousStatus }) {
           : ""
       }
     `,
-    footerNote: "Keep this email for reference until the order cycle is complete.",
+    footerNote: "Keep this email for reference until the order cycle is complete. / يرجى الاحتفاظ بهذا الإيميل للرجوع إليه حتى اكتمال التوصيل.",
   });
 
   await transport.sendMail({
     from: env.mailFrom,
-    to: FIXED_RECIPIENT,
+    to: order.customerEmail || FIXED_RECIPIENT,
     subject,
     text,
     html,
@@ -289,40 +303,40 @@ export async function sendSupportTicketReceivedEmail({ ticket }) {
     return { sent: false, reason: "mail_not_configured" };
   }
 
-  const subject = `Support Ticket Received - ${ticket.id}`;
+  const subject = `Support Ticket Received / تم استلام تذكرة الدعم - ${ticket.id}`;
   const text = [
     `Hello ${ticket.customerName || "Customer"},`,
     "We have received your support ticket.",
     `Ticket ID: ${ticket.id}`,
     `Subject: ${ticket.subject}`,
     "",
-    "Our team will reply as soon as possible.",
+    "مرحباً بك، تم استلام تذكرة الدعم الفني الخاصة بك وسيقوم فريقنا بالرد عليك قريباً.",
   ].join("\n");
 
   const html = renderMailShell({
-    eyebrow: "C2A LAP | Support",
-    title: "Support ticket received",
-    intro: `Hello ${ticket.customerName || "Customer"}, we received your message and our team will follow up soon.`,
+    eyebrow: "C2A LAP | Support / الدعم الفني",
+    title: "Ticket Received / تم استلام تذكرتك",
+    intro: `Hello ${ticket.customerName || "Customer"}, we received your message and our team will follow up soon.<br/><br/>مرحباً ${ticket.customerName || "عميلنا"}، تم استلام رسالتك وتوثيقها بنجاح، وسيتواصل معك أحد ممثلي الدعم الفني قريباً.`,
     body: `
       <table style="width:100%;border-collapse:collapse;">
         <tbody>
           <tr>
-            <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#64748b;width:34%;">Ticket ID</td>
+            <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#64748b;width:34%;">Ticket ID / رقم التذكرة</td>
             <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">${escapeHtml(ticket.id)}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#64748b;">Subject</td>
+            <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#64748b;">Subject / الموضوع</td>
             <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">${escapeHtml(ticket.subject)}</td>
           </tr>
         </tbody>
       </table>
     `,
-    footerNote: "If you need to add more details, reply to this email or contact support from your account page.",
+    footerNote: "If you need to add more details, reply to this email. / إذا كنت ترغب في إضافة تفاصيل أخرى، يمكنك ببساطة الرد على هذا الإيميل.",
   });
 
   await transport.sendMail({
     from: env.mailFrom,
-    to: FIXED_RECIPIENT,
+    to: ticket.customerEmail || FIXED_RECIPIENT,
     subject,
     text,
     html,

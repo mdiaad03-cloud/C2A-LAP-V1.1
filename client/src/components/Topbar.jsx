@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, LogOut, MoonStar, Sun } from "lucide-react";
+import { Bell, LogOut, MoonStar, Sun, Menu } from "lucide-react";
 import { formatDateTime } from "../utils/format";
 
 function getInitials(name) {
@@ -33,6 +33,7 @@ export default function Topbar({
   onLogout,
   notifications = [],
   loading,
+  onToggleSidebar,
 }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -71,6 +72,9 @@ export default function Topbar({
   return (
     <header className="topbar">
       <div className="topbar-user">
+        <button type="button" className="sidebar-toggle-btn" onClick={onToggleSidebar} aria-label={tr("Open Menu", "فتح القائمة")}>
+          <Menu size={20} />
+        </button>
         <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} />
         <div className="topbar-user-meta">
           <p className="topbar-title">
