@@ -689,6 +689,9 @@ function StoreProvider({ children }) {
   }
 
   useEffect(() => {
+    if (products.length === 0) {
+      return;
+    }
     setCart((prev) =>
       prev
         .map((line) => {
