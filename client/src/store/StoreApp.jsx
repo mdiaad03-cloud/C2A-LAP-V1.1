@@ -3190,7 +3190,34 @@ function StorePaymentPage() {
               </p>
               <div style={{ padding: "10px 14px", background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>{tr("IPN Address / Phone", "رقم أو عنوان انستا باي (IPN)")}</span>
-                <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>{meta?.features?.instapayAddress || tr("Not set yet", "لم يتم تحديده بعد")}</strong>
+                <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>{meta?.features?.instapayAddress || "mdiaad003@instapay"}</strong>
+              </div>
+              <div style={{ display: "grid", gap: "6px", marginTop: "4px" }}>
+                <a
+                  href={meta?.features?.instapayLink || "https://ipn.eg/S/mdiaad003/instapay/3ZmQsm"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    background: "#0e7490",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    textAlign: "center",
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    cursor: "pointer",
+                    fontSize: "0.9rem"
+                  }}
+                >
+                  <span>🔗 {tr("Quick Pay via InstaPay App", "اضغط هنا للدفع السريع عبر تطبيق انستا باي")}</span>
+                </a>
               </div>
               <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
                 {tr("After transfer, type the transfer reference number or your account name in the field below and confirm.", "بعد إتمام التحويل، اكتب رقم العملية أو اسم حسابك في حقل مرجع الدفع أدناه واضغط على تأكيد.")}

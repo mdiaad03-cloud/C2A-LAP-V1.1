@@ -62,6 +62,7 @@ const blank = {
     instapayEnabled: true,
     instapayComingSoon: false,
     instapayAddress: "",
+    instapayLink: "",
   },
   faqItems: [blankFaqItem(0), blankFaqItem(1), blankFaqItem(2), blankFaqItem(3)],
   socialLinks: {
@@ -202,6 +203,7 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
         instapayEnabled: settings?.features?.instapayEnabled !== false,
         instapayComingSoon: Boolean(settings?.features?.instapayComingSoon),
         instapayAddress: settings?.features?.instapayAddress || "",
+        instapayLink: settings?.features?.instapayLink || "",
       },
       faqItems,
       socialLinks: {
@@ -345,6 +347,7 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
           instapayEnabled: form.features?.instapayEnabled !== false,
           instapayComingSoon: Boolean(form.features?.instapayComingSoon),
           instapayAddress: form.features?.instapayAddress || "",
+          instapayLink: form.features?.instapayLink || "",
         },
         socialLinks: form.socialLinks,
         agentSettings: form.agentSettings,
@@ -668,16 +671,28 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
                 {tr("Mark as 'Coming Soon'", "إظهار كـ 'يتوفر قريباً ⏳'")}
               </label>
               {form.features?.instapayEnabled !== false && (
-                <label style={{ paddingInlineStart: "20px", display: "grid", gap: "6px" }}>
-                  {tr("InstaPay Phone Number / IPN Address", "رقم الهاتف أو عنوان انستا باي (IPN)")}
-                  <input
-                    type="text"
-                    value={form.features?.instapayAddress || ""}
-                    onChange={(event) => updateFeature("instapayAddress", event.target.value)}
-                    placeholder="e.g. 01068646465 or username@instapay"
-                    style={{ maxWidth: "340px", padding: "8px", border: "1px solid var(--line)", borderRadius: "8px", background: "var(--panel)" }}
-                  />
-                </label>
+                <>
+                  <label style={{ paddingInlineStart: "20px", display: "grid", gap: "6px" }}>
+                    {tr("InstaPay Phone Number / IPN Address", "رقم الهاتف أو عنوان انستا باي (IPN)")}
+                    <input
+                      type="text"
+                      value={form.features?.instapayAddress || ""}
+                      onChange={(event) => updateFeature("instapayAddress", event.target.value)}
+                      placeholder="e.g. 01068646465 or username@instapay"
+                      style={{ maxWidth: "340px", padding: "8px", border: "1px solid var(--line)", borderRadius: "8px", background: "var(--panel)" }}
+                    />
+                  </label>
+                  <label style={{ paddingInlineStart: "20px", display: "grid", gap: "6px", marginTop: "8px" }}>
+                    {tr("InstaPay Direct Payment Link", "رابط الدفع المباشر لانستا باي")}
+                    <input
+                      type="text"
+                      value={form.features?.instapayLink || ""}
+                      onChange={(event) => updateFeature("instapayLink", event.target.value)}
+                      placeholder="e.g. https://ipn.eg/S/..."
+                      style={{ maxWidth: "340px", padding: "8px", border: "1px solid var(--line)", borderRadius: "8px", background: "var(--panel)" }}
+                    />
+                  </label>
+                </>
               )}
               <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
                 {tr("Allow customers to pay via InstaPay app transfer (Includes free shipping).", "السماح للعملاء بالدفع عن طريق تحويل تطبيق انستا باي (شحن مجاني تلقائياً).")}

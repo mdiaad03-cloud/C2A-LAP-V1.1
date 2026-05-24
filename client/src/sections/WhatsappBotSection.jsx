@@ -192,6 +192,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
     { tag: "{itemsList}", label: tr("Items list of the order", "قائمة المنتجات والكميات") },
     { tag: "{total}", label: tr("Order Total Amount (EGP)", "المبلغ الإجمالي بالجنيه") },
     { tag: "{instapayAddress}", label: tr("Store InstaPay Address", "عنوان انستا باي الخاص بالمتجر") },
+    { tag: "{instapayLink}", label: tr("Store InstaPay Payment Link", "رابط الدفع الخاص بانستا باي") },
     { tag: "{carrierLine}", label: tr("Carrier line (Optional)", "اسم شركة الشحن (اختياري)") },
     { tag: "{trackingLine}", label: tr("Tracking Number (Optional)", "رقم التتبع (اختياري)") },
     { tag: "{trackingUrlLine}", label: tr("Tracking URL (Optional)", "رابط تتبع الشحنة (اختياري)") },
