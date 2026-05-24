@@ -3254,12 +3254,18 @@ function StoreAccountPage() {
     if (!window.confirm(confirmMsg)) return;
     setCancellingOrderId(order.orderNumber);
     try {
-      const token = localStorage.getItem("c2a_customer_token") || sessionStorage.getItem("c2a_customer_token");
-      const csrf = localStorage.getItem("c2a_customer_csrf") || sessionStorage.getItem("c2a_customer_csrf");
+      // Read session from the correct storage key
+      let session = null;
+      try {
+        const raw = localStorage.getItem("c2a_store_customer_session_v1");
+        session = raw ? JSON.parse(raw) : null;
+      } catch { /* ignore */ }
+      const token = session?.token || "";
+      const csrf = session?.csrfToken || "";
       await customerApi.post(`/orders/${order.orderNumber}/cancel`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "x-csrf-token": csrf || "",
+          "X-CSRF-Token": csrf || "",
         },
       });
       toast.success(tr("Order cancelled successfully.", "تم إلغاء الطلب بنجاح."));
