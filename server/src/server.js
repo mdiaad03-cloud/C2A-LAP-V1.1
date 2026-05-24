@@ -324,6 +324,18 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // Force cache-busting by redirecting page-level GET requests to have a cb query param
+  if (
+    req.method === "GET" &&
+    !req.path.includes(".") &&
+    !req.path.startsWith("/uploads") &&
+    !req.query.cb
+  ) {
+    const cb = "1.2.3";
+    const separator = req.originalUrl.includes("?") ? "&" : "?";
+    return res.redirect(`${req.originalUrl}${separator}cb=${cb}`);
+  }
+
   const currentPort = Number(req.socket.localPort || env.adminPort);
   const isAdminPort = currentPort === env.adminPort;
   const isStorePort = currentPort === env.storePort;
