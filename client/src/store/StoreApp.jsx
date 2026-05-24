@@ -2698,6 +2698,7 @@ function StoreCheckoutPage() {
     isArabic,
     discountCode,
     discountAmount,
+    meta,
   } = useStore();
 
   const [form, setForm] = useState({
@@ -3116,6 +3117,7 @@ function StorePaymentPage() {
     tr,
     currency,
     isArabic,
+    meta,
   } = useStore();
   const [saving, setSaving] = useState(false);
 
@@ -3178,6 +3180,23 @@ function StorePaymentPage() {
         </div>
 
         <form className="store-checkout-form" onSubmit={confirmPayment}>
+          {checkoutDraft.paymentMethod === "instapay" && (
+            <div className="span-2" style={{ padding: "16px", background: "color-mix(in srgb, var(--brand) 6%, var(--panel))", border: "1px dashed var(--brand)", borderRadius: "12px", display: "grid", gap: "10px", textAlign: "start" }}>
+              <h4 style={{ margin: "0", color: "var(--brand)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <strong>⚡ {tr("InstaPay Transfer Details", "تفاصيل التحويل عبر انستا باي")}</strong>
+              </h4>
+              <p style={{ margin: "0", fontSize: "0.9rem" }}>
+                {tr("Please transfer the exact total amount to the following InstaPay account:", "يرجى تحويل المبلغ الإجمالي المطلوب بدقة إلى حساب انستا باي التالي:")}
+              </p>
+              <div style={{ padding: "10px 14px", background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>{tr("IPN Address / Phone", "رقم أو عنوان انستا باي (IPN)")}</span>
+                <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>{meta?.features?.instapayAddress || tr("Not set yet", "لم يتم تحديده بعد")}</strong>
+              </div>
+              <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
+                {tr("After transfer, type the transfer reference number or your account name in the field below and confirm.", "بعد إتمام التحويل، اكتب رقم العملية أو اسم حسابك في حقل مرجع الدفع أدناه واضغط على تأكيد.")}
+              </p>
+            </div>
+          )}
           <label className="span-2">
             {tr("Payment Method", "\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u062f\u0641\u0639")}
             <select

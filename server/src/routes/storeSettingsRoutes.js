@@ -163,6 +163,9 @@ router.put(
     if (featuresPayload.cashOnDeliveryEnabled !== undefined) {
       db.storeSettings.features.cashOnDeliveryEnabled = Boolean(featuresPayload.cashOnDeliveryEnabled);
     }
+    if (featuresPayload.instapayAddress !== undefined) {
+      db.storeSettings.features.instapayAddress = asOptionalText(featuresPayload.instapayAddress);
+    }
 
     if (req.body.socialLinks !== undefined) {
       db.storeSettings.socialLinks = normalizeSocialLinks(req.body.socialLinks);
