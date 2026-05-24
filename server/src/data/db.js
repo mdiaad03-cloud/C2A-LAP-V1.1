@@ -394,7 +394,57 @@ export async function getDb() {
   return db.data;
 }
 
-let writeQueue = Promise.resolve();
+// ============ Decoupled Background MongoDB Sync ============
+let isSyncing = false;
+let needsSync = false;
+let lastSyncTime = 0;
+const SYNC_INTERVAL_MS = 5000; // Throttle: Sync at most once every 5 seconds under load
+let bgSyncTimeoutId = null;
+
+function triggerBgSync() {
+  needsSync = true;
+  if (isSyncing) return;
+
+  if (bgSyncTimeoutId) {
+    clearTimeout(bgSyncTimeoutId);
+    bgSyncTimeoutId = null;
+  }
+
+  const now = Date.now();
+  const timeSinceLast = now - lastSyncTime;
+  if (timeSinceLast < SYNC_INTERVAL_MS) {
+    const delay = SYNC_INTERVAL_MS - timeSinceLast;
+    bgSyncTimeoutId = setTimeout(performBgSync, delay);
+  } else {
+    performBgSync();
+  }
+}
+
+async function performBgSync() {
+  if (isSyncing) return;
+  isSyncing = true;
+  needsSync = false;
+  bgSyncTimeoutId = null;
+
+  try {
+    console.log("[DB] ☁️ Starting background MongoDB Atlas sync...");
+    // Deep clone database state in memory to prevent mutation race conditions
+    const dataToSave = JSON.parse(JSON.stringify(dbInstance.data));
+    await saveToMongo(dataToSave);
+    lastSyncTime = Date.now();
+    console.log("[DB] ☁️ Background MongoDB Atlas sync completed successfully.");
+  } catch (err) {
+    console.error("[DB] ❌ Background MongoDB Atlas sync failed:", err.message);
+    needsSync = true; // Retry on next save or periodic interval
+  } finally {
+    isSyncing = false;
+    if (needsSync) {
+      // Schedule a retry
+      if (bgSyncTimeoutId) clearTimeout(bgSyncTimeoutId);
+      bgSyncTimeoutId = setTimeout(performBgSync, SYNC_INTERVAL_MS);
+    }
+  }
+}
 
 export async function saveDb() {
   if (!dbInstance) {
@@ -402,18 +452,16 @@ export async function saveDb() {
   }
   dbInstance.data.meta.updatedAt = nowIso();
   
-  writeQueue = writeQueue.then(async () => {
-    try {
-      await dbInstance.write();
-      // Also sync to MongoDB cloud
-      await saveToMongo(dbInstance.data);
-    } catch (error) {
-      console.error("Database save failed:", error);
-      throw error;
-    }
-  });
-
-  return writeQueue;
+  try {
+    // Write locally to JSON file immediately (extremely fast disk write)
+    await dbInstance.write();
+    
+    // Trigger background sync to MongoDB Atlas (non-blocking)
+    triggerBgSync();
+  } catch (error) {
+    console.error("Local database write failed:", error);
+    throw error;
+  }
 }
 
 export async function getRawDbPath() {

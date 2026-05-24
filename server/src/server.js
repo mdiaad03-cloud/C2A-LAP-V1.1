@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Readable } from "node:stream";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -125,7 +126,15 @@ app.use(
   }),
 );
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "img-src": ["'self'", "data:", "https:", "http:"],
+      "connect-src": ["'self'", "https:", "http:"],
+    }
+  }
+}));
 app.use(compression());
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -207,7 +216,7 @@ app.use(
   }),
 );
 
-// Image proxy to load external product images through our server
+// Image proxy to load external product images through our server safely and efficiently
 app.get("/api/image-proxy", async (req, res) => {
   const targetUrl = req.query.url;
   if (!targetUrl || typeof targetUrl !== "string") {
@@ -222,6 +231,17 @@ app.get("/api/image-proxy", async (req, res) => {
     }
   } catch {
     return res.status(400).json({ error: "Invalid URL." });
+  }
+
+  // SSRF Protection: block access to private/localhost addresses
+  const hostname = parsed.hostname.toLowerCase();
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    isPrivateIpv4(hostname)
+  ) {
+    return res.status(403).json({ error: "Access to private or local network resources is forbidden." });
   }
 
   try {
@@ -244,12 +264,18 @@ app.get("/api/image-proxy", async (req, res) => {
     }
 
     const contentType = response.headers.get("content-type") || "image/jpeg";
+    
+    // Strict image validation
+    if (!contentType.startsWith("image/")) {
+      return res.status(400).json({ error: "Only image files can be proxied." });
+    }
+
     res.setHeader("Content-Type", contentType);
     res.setHeader("Cache-Control", "public, max-age=86400");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    res.send(buffer);
+    // Stream image chunks directly to prevent RAM exhaustion
+    Readable.fromWeb(response.body).pipe(res);
   } catch (err) {
     if (err.name === "AbortError") {
       return res.status(504).json({ error: "Image fetch timed out." });
@@ -375,6 +401,17 @@ app.use(notFound);
 app.use(errorHandler);
 
 async function bootstrap() {
+  // Validate production-safe environment variables
+  const jwtSec = process.env.JWT_SECRET;
+  if (!jwtSec) {
+    console.error("❌ CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing!");
+    process.exit(1);
+  }
+  if (jwtSec === "dev-secret-change-me") {
+    console.error("❌ CRITICAL SECURITY ERROR: JWT_SECRET is using the insecure default fallback 'dev-secret-change-me'!");
+    process.exit(1);
+  }
+
   await initializeDb();
   const db = await getDb();
   try {
