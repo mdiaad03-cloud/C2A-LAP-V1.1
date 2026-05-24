@@ -174,6 +174,29 @@ router.put(
       db.storeSettings.agentSettings = normalizeAgentSettings(req.body.agentSettings);
     }
 
+    // Recalculate and update all product selling prices based on the new markup settings
+    const agentSettings = db.storeSettings.agentSettings || {};
+    if (Array.isArray(db.products)) {
+      const nowIsoStr = new Date().toISOString();
+      for (const product of db.products) {
+        const purchasePrice = Number(product.purchasePrice || 0);
+        if (purchasePrice > 0) {
+          let nextSellingPrice = purchasePrice;
+          if (agentSettings.priceMarkupEnabled) {
+            const markupVal = Number(agentSettings.priceMarkupValue) || 0;
+            if (agentSettings.priceMarkupType === "percent") {
+              nextSellingPrice = purchasePrice * (1 + markupVal / 100);
+            } else {
+              nextSellingPrice = purchasePrice + markupVal;
+            }
+          }
+          product.sellingPrice = Number(nextSellingPrice.toFixed(2));
+          product.price = product.sellingPrice; // Keep both in sync
+          product.updatedAt = nowIsoStr;
+        }
+      }
+    }
+
     await saveDb();
 
     await addLog({
