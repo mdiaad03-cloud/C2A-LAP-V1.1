@@ -384,6 +384,14 @@ async function bootstrap() {
     console.error("Failed to initialize auto-cancel scheduler:", autoCancelErr);
   }
 
+  // Auto-configure UltraMsg Webhook settings on startup
+  try {
+    const { autoConfigureUltraMsgWebhook } = await import("./services/whatsappService.js");
+    await autoConfigureUltraMsgWebhook();
+  } catch (webhookErr) {
+    console.error("Failed to auto-configure UltraMsg webhook:", webhookErr);
+  }
+
   const ports = [env.adminPort, env.storePort];
   const uniquePorts = [...new Set(ports)];
 

@@ -34,6 +34,22 @@ router.get(
   }),
 );
 
+// GET /api/whatsapp/config (Admin diagnostic view)
+router.get(
+  "/config",
+  authenticate,
+  authorize("admin"),
+  asyncHandler(async (req, res) => {
+    const { env } = await import("../config/env.js");
+    res.json({
+      storeBaseUrl: env.storeBaseUrl,
+      ultramsgInstanceId: env.ultramsgInstanceId,
+      hasToken: Boolean(env.ultramsgToken),
+    });
+  }),
+);
+
+
 // 2. POST /api/whatsapp/simulate-reply (Simulate customer replying to the WhatsApp bot)
 router.post(
   "/simulate-reply",

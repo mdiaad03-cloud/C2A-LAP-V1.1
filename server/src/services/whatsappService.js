@@ -342,3 +342,35 @@ export async function sendOrderStatusMessage(order, previousStatus) {
 
   return sendWhatsAppMessage(order.customerPhone, messageText, order.id);
 }
+
+export async function autoConfigureUltraMsgWebhook() {
+  const instanceId = env.ultramsgInstanceId;
+  const token = env.ultramsgToken;
+  const storeBaseUrl = env.storeBaseUrl || "https://c2a-lap-v11-production.up.railway.app";
+  
+  if (!instanceId || !token) {
+    console.log("[UltraMsg Webhook] Skipping auto-configuration: Credentials not fully set.");
+    return;
+  }
+  
+  const webhookUrl = `${storeBaseUrl}/api/whatsapp/webhook`;
+  console.log(`[UltraMsg Webhook] Auto-configuring webhook URL: ${webhookUrl}...`);
+  
+  try {
+    const response = await axios.post(
+      `https://api.ultramsg.com/${instanceId}/instance/settings`,
+      {
+        token,
+        webhook_url: webhookUrl,
+        webhook_message_received: "true",
+        webhook_message_create: "false",
+        webhook_message_ack: "false",
+      },
+      { timeout: 15000 }
+    );
+    console.log("[UltraMsg Webhook] ✅ Webhook auto-configured successfully:", response.data);
+  } catch (error) {
+    console.error("[UltraMsg Webhook] ❌ Failed to auto-configure webhook:", error?.response?.data || error.message);
+  }
+}
+
