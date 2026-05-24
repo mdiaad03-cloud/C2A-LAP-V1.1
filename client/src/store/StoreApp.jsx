@@ -2606,7 +2606,7 @@ function StoreCartPage() {
                 return;
               }
               try {
-                const response = await storeApi.get(`/discount/check/${code}`, {
+                const response = await storeApi.post(`/discount/apply`, { code }, {
                   headers: customerHeaders(),
                 });
                 if (response.data?.coupon) {

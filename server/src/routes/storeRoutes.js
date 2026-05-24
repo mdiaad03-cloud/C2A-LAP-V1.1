@@ -154,7 +154,7 @@ async function resolveCheckoutCustomer(req, db) {
 
 const validateCouponHandler = asyncHandler(async (req, res) => {
   const db = await getDb();
-  const code = String(req.params.code || "").trim().toUpperCase();
+  const code = String(req.params.code || req.body.code || "").trim().toUpperCase();
   if (!code) {
     return res.status(400).json({ error: "Coupon code is required." });
   }
@@ -199,6 +199,7 @@ const validateCouponHandler = asyncHandler(async (req, res) => {
 
 router.get("/discount/check/:code", validateCouponHandler);
 router.get("/coupons/validate/:code", validateCouponHandler);
+router.post("/discount/apply", validateCouponHandler);
 
 router.get(
   "/diagnostics/view",
