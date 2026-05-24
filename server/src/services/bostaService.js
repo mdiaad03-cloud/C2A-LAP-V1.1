@@ -172,12 +172,23 @@ export async function resolveBostaCityCode(cityName) {
   }
 
   const cities = await listBostaCities();
-  const match = cities.find((city) => {
+  // 1. Try exact match first
+  let match = cities.find((city) => {
     const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName, city?.alias]
       .filter(Boolean)
       .map((item) => normalizeCityName(item));
     return candidates.includes(normalizedInput);
   });
+
+  // 2. Try substring match (e.g. if input contains a full address or compound city name)
+  if (!match) {
+    match = cities.find((city) => {
+      const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName, city?.alias]
+        .filter(Boolean)
+        .map((item) => normalizeCityName(item));
+      return candidates.some(cand => cand.length > 3 && normalizedInput.includes(cand));
+    });
+  }
 
   return String(match?._id || match?.id || match?.code || "").trim();
 }
@@ -494,6 +505,10 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
 
   if (!cityCode) {
     cityCode = await resolveBostaCityCode(order.customerCity);
+  }
+
+  if (!cityCode) {
+    cityCode = await resolveBostaCityCode(order.customerAddress || order.address);
   }
 
   if (!cityCode && env.bostaDefaultCityCode) {
