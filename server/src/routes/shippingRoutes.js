@@ -128,6 +128,13 @@ router.post(
         } catch (mailError) {
           console.error(`BOSTA WEBHOOK: Email failed for ${order.orderNumber}:`, mailError.message);
         }
+
+        try {
+          const { sendOrderStatusMessage } = await import("../services/whatsappService.js");
+          await sendOrderStatusMessage(order, previousStatus);
+        } catch (whatsappError) {
+          console.error(`BOSTA WEBHOOK: WhatsApp notification failed for ${order.orderNumber}:`, whatsappError.message);
+        }
       }
     } catch (err) {
       console.error("BOSTA WEBHOOK: Processing error:", err.message, err.stack);

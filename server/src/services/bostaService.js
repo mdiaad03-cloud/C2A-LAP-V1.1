@@ -36,6 +36,9 @@ function extractPayloadArray(payload) {
   if (Array.isArray(payload)) {
     return payload;
   }
+  if (Array.isArray(payload?.data?.list)) {
+    return payload.data.list;
+  }
   if (Array.isArray(payload?.data)) {
     return payload.data;
   }
@@ -122,6 +125,52 @@ export async function resolveBostaCityCode(cityName) {
   });
 
   return String(match?.code || match?._id || match?.id || "").trim();
+}
+
+export async function resolveBostaDistrict(cityId, cityName, fullAddress) {
+  if (!cityId) return "";
+  try {
+    const payload = await bostaRequest(`/cities/${cityId}/districts`);
+    const districts = payload?.data || [];
+    if (districts.length === 0) {
+      return "";
+    }
+    const cleanAddress = String(fullAddress || "").trim().toLowerCase()
+      .replace(/،/g, " ")
+      .replace(/,/g, " ")
+      .replace(/\s+/g, " ");
+      
+    // 1. Try to find a district name mentioned in the address
+    for (const dist of districts) {
+      const candidates = [dist.districtName, dist.districtOtherName]
+        .filter(Boolean)
+        .map(n => String(n).trim().toLowerCase());
+        
+      for (const cand of candidates) {
+        if (cand.length > 2 && cleanAddress.includes(cand)) {
+          return dist.districtName;
+        }
+      }
+    }
+    
+    // 2. Try to find a district name matching the city name
+    const cleanCity = String(cityName || "").trim().toLowerCase();
+    const cityMatch = districts.find(dist => {
+      const candidates = [dist.districtName, dist.districtOtherName, dist.zoneName, dist.zoneOtherName]
+        .filter(Boolean)
+        .map(n => String(n).trim().toLowerCase());
+      return candidates.includes(cleanCity);
+    });
+    if (cityMatch) {
+      return cityMatch.districtName;
+    }
+    
+    // 3. Fallback to the first district in the list
+    return districts[0].districtName;
+  } catch (err) {
+    console.error("resolveBostaDistrict failed:", err);
+    return "";
+  }
 }
 
 export async function getBostaHealth() {
@@ -346,6 +395,7 @@ function buildDropOffAddress(order, options = {}) {
   // =========================
 
   const cityId =
+    options.cityId ||
     cityMap[cityName] ||
     "FceDyHXwpSYYF9zGW";
 
@@ -381,6 +431,12 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
     );
   }
 
+  // Resolve district automatically if not provided
+  let resolvedDistrict = options.district || order.customerDistrict || order.shippingDistrict || order.district || "";
+  if (!resolvedDistrict) {
+    resolvedDistrict = await resolveBostaDistrict(cityCode, order.customerCity, order.customerAddress);
+  }
+
   const payload = {
     type: 10,
     notes: String(options.notes || env.bostaDefaultNotes || order.customerNotes || "").trim(),
@@ -392,7 +448,7 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
       phone: String(order.customerPhone || "").trim(),
       email: String(order.customerEmail || "").trim(),
     },
-    dropOffAddress: buildDropOffAddress(order),
+    dropOffAddress: buildDropOffAddress(order, { ...options, district: resolvedDistrict, cityId: cityCode }),
   };
 
   if (env.bostaPickupLocationId) {

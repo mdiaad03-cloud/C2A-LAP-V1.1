@@ -495,6 +495,22 @@ router.post(
     await saveDb();
     await syncSalesExcelSafe(db.sales);
 
+    // Notify admin about new order
+    try {
+      const { sendWhatsAppAdminAlert } = await import("../services/whatsappService.js");
+      const adminAlertText = `🔔 *طلب جديد رقم ${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+📍 العنوان: *${order.customerAddress} - ${order.customerCity}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*
+💳 الدفع: *${order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام 💵" : "دفع إلكتروني 💳"}*
+🛍️ المنتجات:
+${order.items.map((item) => `  - ${item.laptopName} × ${item.quantity}`).join("\n")}`;
+      await sendWhatsAppAdminAlert(adminAlertText);
+    } catch (whatsappAdminErr) {
+      console.error(`WhatsApp admin new order notification failed for ${order.orderNumber}:`, whatsappAdminErr);
+    }
+
     // Paymob orders: auto-confirm since payment is already processed
     const isOnlinePayment = payload.paymentMethod === "paymob" || payload.paymentMethod === "paymob_egypt";
     if (isOnlinePayment) {

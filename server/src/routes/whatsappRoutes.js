@@ -2,7 +2,7 @@ import { Router } from "express";
 import { getDb, saveDb } from "../data/db.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate, authorize } from "../middleware/auth.js";
-import { receiveCustomerReply, sendWhatsAppMessage } from "../services/whatsappService.js";
+import { receiveCustomerReply, sendWhatsAppMessage, DEFAULT_TEMPLATES } from "../services/whatsappService.js";
 import {
   ORDER_STATUSES,
   buildOrderStatusHistory,
@@ -208,6 +208,43 @@ router.get(
   (req, res) => {
     res.status(200).send("OK");
   },
+);
+
+// 6. GET /api/whatsapp/templates (Admin/Employee view current templates)
+router.get(
+  "/templates",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    const dbTemplates = db.whatsappTemplates || {};
+    const templates = {
+      ...DEFAULT_TEMPLATES,
+      ...dbTemplates,
+    };
+    res.json({ templates });
+  })
+);
+
+// 7. POST /api/whatsapp/templates (Admin only - save updated templates)
+router.post(
+  "/templates",
+  authenticate,
+  authorize("admin"),
+  asyncHandler(async (req, res) => {
+    const { templates } = req.body;
+    if (!templates || typeof templates !== "object") {
+      return res.status(400).json({ error: "Templates object is required." });
+    }
+
+    const db = await getDb();
+    db.whatsappTemplates = {
+      ...(db.whatsappTemplates || {}),
+      ...templates,
+    };
+    await saveDb();
+
+    res.json({ success: true, templates: db.whatsappTemplates });
+  })
 );
 
 export default router;
