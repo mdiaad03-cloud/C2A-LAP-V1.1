@@ -107,7 +107,13 @@ export const DEFAULT_TEMPLATES = {
 };
 
 export function replaceTemplateVariables(template, order) {
-  const paymentLabel = order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام 💵" : "تم الدفع إلكترونياً 💳";
+  let paymentLabel = "الدفع عند الاستلام 💵";
+  if (order.paymentMethod === "paymob_egypt") {
+    paymentLabel = "تم الدفع إلكترونياً 💳";
+  } else if (order.paymentMethod === "instapay") {
+    paymentLabel = "تحويل انستا باي ⚡";
+  }
+
   const itemsList = (order.items || [])
     .map((item, i) => `  ${i + 1}. ${item.laptopName || item.name || "منتج"} × ${item.quantity}`)
     .join("\n");
@@ -116,7 +122,7 @@ export function replaceTemplateVariables(template, order) {
   
   const carrierLine = order.shippingCompanyName ? `🏢 شركة الشحن: *${order.shippingCompanyName}*` : "";
   const trackingLine = order.trackingNumber ? `🔢 رقم التتبع: *${order.trackingNumber}*` : "";
-  const trackingUrlLine = order.trackingNumber ? `🔗 تتبع شحنتك:\nhttps://bosta.co/tracking-shipment/?track_num=${order.trackingNumber}` : "";
+  const trackingUrlLine = order.trackingNumber ? `🔗 تتبع شحنتك:\nhttps://tracking.bosta.co/tracker/${order.trackingNumber}` : "";
 
   return template
     .replace(/{customerName}/g, order.customerName || "")

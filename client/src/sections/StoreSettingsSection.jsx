@@ -54,7 +54,14 @@ const blank = {
   faqTitleAr: "",
   faqSubtitle: "",
   faqSubtitleAr: "",
-  showReviews: true,
+  features: {
+    reviewsEnabled: true,
+    cashOnDeliveryEnabled: true,
+    paymobEnabled: true,
+    paymobComingSoon: false,
+    instapayEnabled: true,
+    instapayComingSoon: false,
+  },
   faqItems: [blankFaqItem(0), blankFaqItem(1), blankFaqItem(2), blankFaqItem(3)],
   socialLinks: {
     whatsapp: { enabled: false, url: "" },
@@ -186,7 +193,14 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
       faqTitleAr: settings?.content?.faqTitleAr || "",
       faqSubtitle: settings?.content?.faqSubtitle || "",
       faqSubtitleAr: settings?.content?.faqSubtitleAr || "",
-      showReviews: settings?.features?.reviewsEnabled !== false,
+      features: {
+        reviewsEnabled: settings?.features?.reviewsEnabled !== false,
+        cashOnDeliveryEnabled: settings?.features?.cashOnDeliveryEnabled !== false,
+        paymobEnabled: settings?.features?.paymobEnabled !== false,
+        paymobComingSoon: Boolean(settings?.features?.paymobComingSoon),
+        instapayEnabled: settings?.features?.instapayEnabled !== false,
+        instapayComingSoon: Boolean(settings?.features?.instapayComingSoon),
+      },
       faqItems,
       socialLinks: {
         whatsapp: {
@@ -221,6 +235,16 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateFeature(key, value) {
+    setForm((prev) => ({
+      ...prev,
+      features: {
+        ...prev.features,
+        [key]: value,
+      },
+    }));
   }
 
   function updateFaq(index, field, value) {
@@ -312,7 +336,12 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
           faqItems: visibleFaqItems,
         },
         features: {
-          reviewsEnabled: form.showReviews,
+          reviewsEnabled: form.features?.reviewsEnabled !== false,
+          cashOnDeliveryEnabled: form.features?.cashOnDeliveryEnabled !== false,
+          paymobEnabled: form.features?.paymobEnabled !== false,
+          paymobComingSoon: Boolean(form.features?.paymobComingSoon),
+          instapayEnabled: form.features?.instapayEnabled !== false,
+          instapayComingSoon: Boolean(form.features?.instapayComingSoon),
         },
         socialLinks: form.socialLinks,
         agentSettings: form.agentSettings,
@@ -575,6 +604,76 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
         <section className="span-2 panel table-panel">
           <div className="panel-head row-head">
             <div>
+              <h3>{tr("Payment Methods Settings", "إعدادات وسائل الدفع")}</h3>
+              <span>{tr("Configure which payment methods are enabled or marked as 'Coming Soon'.", "اضبط وسائل الدفع المفعلة أو التي تظهر كـ 'يتوفر قريباً'.")}</span>
+            </div>
+          </div>
+          <div className="form-grid" style={{ padding: "16px", gap: "16px" }}>
+            <div style={{ display: "grid", gap: "10px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "rgba(0,0,0,0.01)" }}>
+              <label className="checkbox-field" style={{ fontWeight: "700" }}>
+                <input
+                  type="checkbox"
+                  checked={form.features?.cashOnDeliveryEnabled !== false}
+                  onChange={(event) => updateFeature("cashOnDeliveryEnabled", event.target.checked)}
+                />
+                {tr("Enable Cash On Delivery", "تفعيل الدفع عند الاستلام")}
+              </label>
+              <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
+                {tr("Allow customers to pay cash when order is delivered.", "السماح للعملاء بالدفع نقداً عند استلام الشحنة.")}
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gap: "10px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "rgba(0,0,0,0.01)" }}>
+              <label className="checkbox-field" style={{ fontWeight: "700" }}>
+                <input
+                  type="checkbox"
+                  checked={form.features?.paymobEnabled !== false}
+                  onChange={(event) => updateFeature("paymobEnabled", event.target.checked)}
+                />
+                {tr("Enable Paymob (Credit Card / Wallet)", "تفعيل باي موب (بطاقات / محفظة)")}
+              </label>
+              <label className="checkbox-field" style={{ fontSize: "0.88rem", paddingInlineStart: "20px" }}>
+                <input
+                  type="checkbox"
+                  disabled={form.features?.paymobEnabled === false}
+                  checked={Boolean(form.features?.paymobComingSoon)}
+                  onChange={(event) => updateFeature("paymobComingSoon", event.target.checked)}
+                />
+                {tr("Mark as 'Coming Soon'", "إظهار كـ 'يتوفر قريباً ⏳'")}
+              </label>
+              <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
+                {tr("Accept card and mobile wallet payments via Paymob Egypt (Includes free shipping).", "قبول الدفع بالبطاقات والمحافظ الإلكترونية عبر باي موب مصر (شحن مجاني تلقائياً).")}
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gap: "10px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "rgba(0,0,0,0.01)" }}>
+              <label className="checkbox-field" style={{ fontWeight: "700" }}>
+                <input
+                  type="checkbox"
+                  checked={form.features?.instapayEnabled !== false}
+                  onChange={(event) => updateFeature("instapayEnabled", event.target.checked)}
+                />
+                {tr("Enable InstaPay", "تفعيل انستا باي")}
+              </label>
+              <label className="checkbox-field" style={{ fontSize: "0.88rem", paddingInlineStart: "20px" }}>
+                <input
+                  type="checkbox"
+                  disabled={form.features?.instapayEnabled === false}
+                  checked={Boolean(form.features?.instapayComingSoon)}
+                  onChange={(event) => updateFeature("instapayComingSoon", event.target.checked)}
+                />
+                {tr("Mark as 'Coming Soon'", "إظهار كـ 'يتوفر قريباً ⏳'")}
+              </label>
+              <p style={{ margin: "0", fontSize: "0.82rem", color: "var(--muted)" }}>
+                {tr("Allow customers to pay via InstaPay app transfer (Includes free shipping).", "السماح للعملاء بالدفع عن طريق تحويل تطبيق انستا باي (شحن مجاني تلقائياً).")}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="span-2 panel table-panel">
+          <div className="panel-head row-head">
+            <div>
               <h3>{tr("Agent Settings", "إعدادات الإيجنت")}</h3>
               <span>{tr("Control automation for products, support, shipping, and Excel imports.", "تحكم في أتمتة المنتجات والدعم والشحن واستيراد الإكسل.")}</span>
             </div>
@@ -764,7 +863,7 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
         </section>
 
         <label className="span-2 checkbox-field">
-          <input type="checkbox" checked={form.showReviews} onChange={(event) => update("showReviews", event.target.checked)} />
+          <input type="checkbox" checked={form.features?.reviewsEnabled !== false} onChange={(event) => updateFeature("reviewsEnabled", event.target.checked)} />
           {tr("Show customer review section in storefront", "إظهار قسم تقييمات العملاء في المتجر")}
         </label>
 

@@ -1096,7 +1096,13 @@ async function placeOrder({ customer, paymentMethod, paymentReference }) {
     () => Number(cartItems.reduce((sum, line) => sum + Number(line.lineTotal || 0), 0).toFixed(2)),
     [cartItems],
   );
-  const shippingCost = useMemo(() => computeShipping(subtotal, meta?.shipping), [meta?.shipping, subtotal]);
+  const shippingCost = useMemo(() => {
+    const paymentMethod = checkoutDraft?.paymentMethod || "cash_on_delivery";
+    if (paymentMethod === "paymob_egypt" || paymentMethod === "instapay") {
+      return 0;
+    }
+    return computeShipping(subtotal, meta?.shipping);
+  }, [meta?.shipping, subtotal, checkoutDraft?.paymentMethod]);
   
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -3026,8 +3032,21 @@ function StoreCheckoutPage() {
                 value={form.paymentMethod}
                 onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
               >
-                <option value="cash_on_delivery">{tr("Cash On Delivery", "الدفع عند الاستلام")}</option>
-                <option value="paymob_egypt">{tr("Paymob (Egypt)", "باي موب")}</option>
+                {meta?.features?.cashOnDeliveryEnabled !== false && (
+                  <option value="cash_on_delivery">{tr("Cash On Delivery", "الدفع عند الاستلام")}</option>
+                )}
+                {meta?.features?.paymobEnabled !== false && (
+                  <option value="paymob_egypt" disabled={Boolean(meta?.features?.paymobComingSoon)}>
+                    {tr("Paymob (Egypt)", "باي موب")}
+                    {meta?.features?.paymobComingSoon ? ` - ${tr("Coming Soon", "يتوفر قريباً ⏳")}` : ""}
+                  </option>
+                )}
+                {meta?.features?.instapayEnabled !== false && (
+                  <option value="instapay" disabled={Boolean(meta?.features?.instapayComingSoon)}>
+                    {tr("InstaPay Transfer", "تحويل انستا باي")}
+                    {meta?.features?.instapayComingSoon ? ` - ${tr("Coming Soon", "يتوفر قريباً ⏳")}` : ""}
+                  </option>
+                )}
               </select>
             </label>
             <label>
@@ -3167,8 +3186,21 @@ function StorePaymentPage() {
                 saveCheckoutDraft({ paymentMethod: event.target.value })
               }
             >
-              <option value="cash_on_delivery">{tr("Cash On Delivery", "\u062f\u0641\u0639 \u0639\u0646\u062f \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645")}</option>
-              <option value="paymob_egypt">{tr("Paymob (Egypt)", "Paymob (\u0645\u0635\u0631)")}</option>
+              {meta?.features?.cashOnDeliveryEnabled !== false && (
+                <option value="cash_on_delivery">{tr("Cash On Delivery", "\u062f\u0641\u0639 \u0639\u0646\u062f \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645")}</option>
+              )}
+              {meta?.features?.paymobEnabled !== false && (
+                <option value="paymob_egypt" disabled={Boolean(meta?.features?.paymobComingSoon)}>
+                  {tr("Paymob (Egypt)", "Paymob (\u0645\u0635\u0631)")}
+                  {meta?.features?.paymobComingSoon ? ` - ${tr("Coming Soon", "يتوفر قريباً ⏳")}` : ""}
+                </option>
+              )}
+              {meta?.features?.instapayEnabled !== false && (
+                <option value="instapay" disabled={Boolean(meta?.features?.instapayComingSoon)}>
+                  {tr("InstaPay Transfer", "تحويل انستا باي")}
+                  {meta?.features?.instapayComingSoon ? ` - ${tr("Coming Soon", "يتوفر قريباً ⏳")}` : ""}
+                </option>
+              )}
             </select>
           </label>
           <label className="span-2">
@@ -4262,6 +4294,7 @@ function StoreSuccessPage() {
     if (!method) return tr("Cash On Delivery", "دفع عند الاستلام");
     if (method === "cash_on_delivery") return tr("Cash On Delivery", "دفع عند الاستلام");
     if (method === "paymob_egypt") return "Paymob";
+    if (method === "instapay") return tr("InstaPay Transfer", "تحويل انستا باي");
     return method.replace(/_/g, " ");
   };
 
