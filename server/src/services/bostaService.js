@@ -110,18 +110,60 @@ export async function listBostaCities() {
   return extractPayloadArray(payload);
 }
 
+function normalizeCityName(name) {
+  let cleaned = String(name || "").trim().toLowerCase();
+  
+  // Standardize Arabic spelling
+  cleaned = cleaned
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, "");
+    
+  // Standardize English spelling variations
+  if (cleaned.includes("assiut") || cleaned.includes("assuit") || cleaned.includes("asyut") || cleaned.includes("اسيوط")) {
+    return "asyut";
+  }
+  if (cleaned.includes("cairo") || cleaned.includes("القاهره") || cleaned.includes("القاهرة")) {
+    return "cairo";
+  }
+  if (cleaned.includes("giza") || cleaned.includes("الجيزه") || cleaned.includes("الجيزة")) {
+    return "giza";
+  }
+  if (cleaned.includes("alex") || cleaned.includes("الاسكندريه") || cleaned.includes("الاسكندرية")) {
+    return "alexandria";
+  }
+  if (cleaned.includes("sohag") || cleaned.includes("سوهاج")) {
+    return "sohag";
+  }
+  if (cleaned.includes("suez") || cleaned.includes("السويس")) {
+    return "suez";
+  }
+  if (cleaned.includes("ismailia") || cleaned.includes("الاسماعيليه") || cleaned.includes("الاسماعيلية")) {
+    return "ismailia";
+  }
+  if (cleaned.includes("damietta") || cleaned.includes("دمياط")) {
+    return "damietta";
+  }
+  if (cleaned.includes("port") || cleaned.includes("بورسعيد")) {
+    return "portsaid";
+  }
+  
+  return cleaned;
+}
+
 export async function resolveBostaCityCode(cityName) {
-  const normalizedName = String(cityName || "").trim().toLowerCase();
-  if (!normalizedName) {
+  const normalizedInput = normalizeCityName(cityName);
+  if (!normalizedInput) {
     return "";
   }
 
   const cities = await listBostaCities();
   const match = cities.find((city) => {
-    const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName]
+    const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName, city?.alias]
       .filter(Boolean)
-      .map((item) => String(item).trim().toLowerCase());
-    return candidates.includes(normalizedName);
+      .map((item) => normalizeCityName(item));
+    return candidates.includes(normalizedInput);
   });
 
   return String(match?.code || match?._id || match?.id || "").trim();
