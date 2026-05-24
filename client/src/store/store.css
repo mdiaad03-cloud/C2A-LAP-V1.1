@@ -1270,13 +1270,20 @@
 }
 
 .account-section {
-  max-width: 760px;
+  max-width: 1140px;
   margin: 0 auto;
 }
 
 .account-stack {
   display: grid;
   gap: 12px;
+}
+
+@media (min-width: 769px) {
+  .account-stack {
+    grid-template-columns: 1.8fr 1fr;
+    gap: 24px;
+  }
 }
 
 .account-form {

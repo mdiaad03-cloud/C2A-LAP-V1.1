@@ -2,7 +2,7 @@ import { Router } from "express";
 import { getDb, saveDb } from "../data/db.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate, authorize } from "../middleware/auth.js";
-import { receiveCustomerReply, sendWhatsAppMessage } from "../services/whatsappService.js";
+import { receiveCustomerReply, sendWhatsAppMessage, DEFAULT_TEMPLATES } from "../services/whatsappService.js";
 import {
   ORDER_STATUSES,
   buildOrderStatusHistory,
@@ -72,7 +72,6 @@ router.get(
     });
   }),
 );
-
 
 // 2. POST /api/whatsapp/simulate-reply (Simulate customer replying to the WhatsApp bot)
 router.post(
@@ -147,6 +146,19 @@ router.post(
     const followUpText = `تمت عملية تأكيد طلبك رقم ${order.orderNumber} بنجاح عبر الرابط! 🎉 سنقوم بشحنه إليك قريباً. شكراً لك!`;
     await sendWhatsAppMessage(order.customerPhone, followUpText, order.id);
 
+    // Notify Admin Alert
+    try {
+      const { sendWhatsAppAdminAlert } = await import("../services/whatsappService.js");
+      const adminAlertText = `✅ *تم تأكيد الطلب من العميل عبر رابط الويب*
+📋 طلب رقم: *${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*`;
+      await sendWhatsAppAdminAlert(adminAlertText);
+    } catch (adminAlertErr) {
+      console.error("WhatsApp Link Confirmation Admin Alert failed:", adminAlertErr);
+    }
+
     await saveDb();
     if (salesChanged) {
       await syncSalesExcelSafe(db.sales);
@@ -169,7 +181,6 @@ router.post(
 router.post(
   "/webhook",
   asyncHandler(async (req, res) => {
-    // UltraMsg sends webhook data in different formats
     const data = req.body || {};
     const eventType = data.event_type || data.type || "";
     
@@ -186,7 +197,7 @@ router.post(
       return res.json({ success: true, skipped: true, reason: "no phone or text" });
     }
 
-    // Clean the phone - remove @c.us suffix if present
+    // Clean the phone
     const cleanedPhone = String(phone).replace(/@c\.us$/, "").replace(/@s\.whatsapp\.net$/, "");
 
     console.log(`[UltraMsg Webhook] Received from ${cleanedPhone}: "${text}"`);
@@ -208,6 +219,43 @@ router.get(
   (req, res) => {
     res.status(200).send("OK");
   },
+);
+
+// 6. GET /api/whatsapp/templates (Admin/Employee view current templates)
+router.get(
+  "/templates",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    const dbTemplates = db.whatsappTemplates || {};
+    const templates = {
+      ...DEFAULT_TEMPLATES,
+      ...dbTemplates,
+    };
+    res.json({ templates });
+  })
+);
+
+// 7. POST /api/whatsapp/templates (Admin only - save updated templates)
+router.post(
+  "/templates",
+  authenticate,
+  authorize("admin"),
+  asyncHandler(async (req, res) => {
+    const { templates } = req.body;
+    if (!templates || typeof templates !== "object") {
+      return res.status(400).json({ error: "Templates object is required." });
+    }
+
+    const db = await getDb();
+    db.whatsappTemplates = {
+      ...(db.whatsappTemplates || {}),
+      ...templates,
+    };
+    await saveDb();
+
+    res.json({ success: true, templates: db.whatsappTemplates });
+  })
 );
 
 export default router;

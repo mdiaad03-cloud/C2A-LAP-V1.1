@@ -36,6 +36,9 @@ function extractPayloadArray(payload) {
   if (Array.isArray(payload)) {
     return payload;
   }
+  if (Array.isArray(payload?.data?.list)) {
+    return payload.data.list;
+  }
   if (Array.isArray(payload?.data)) {
     return payload.data;
   }
@@ -107,21 +110,122 @@ export async function listBostaCities() {
   return extractPayloadArray(payload);
 }
 
+function normalizeCityName(name) {
+  let cleaned = String(name || "").trim().toLowerCase();
+  
+  // Strip common administrative words to handle Nominatim geolocation outputs robustly
+  cleaned = cleaned
+    .replace(/محافظة/g, "")
+    .replace(/محافظه/g, "")
+    .replace(/مدينة/g, "")
+    .replace(/مدينه/g, "")
+    .replace(/مركز/g, "")
+    .replace(/governorate/g, "")
+    .replace(/city/g, "");
+
+  // Standardize Arabic spelling
+  cleaned = cleaned
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, "");
+    
+  // Standardize English spelling variations
+  if (cleaned.includes("assiut") || cleaned.includes("assuit") || cleaned.includes("asyut") || cleaned.includes("اسيوط")) {
+    return "asyut";
+  }
+  if (cleaned.includes("cairo") || cleaned.includes("القاهره") || cleaned.includes("القاهرة")) {
+    return "cairo";
+  }
+  if (cleaned.includes("giza") || cleaned.includes("الجيزه") || cleaned.includes("الجيزة")) {
+    return "giza";
+  }
+  if (cleaned.includes("alex") || cleaned.includes("الاسكندريه") || cleaned.includes("الاسكندرية")) {
+    return "alexandria";
+  }
+  if (cleaned.includes("sohag") || cleaned.includes("سوهاج")) {
+    return "sohag";
+  }
+  if (cleaned.includes("suez") || cleaned.includes("السويس")) {
+    return "suez";
+  }
+  if (cleaned.includes("ismailia") || cleaned.includes("الاسماعيليه") || cleaned.includes("الاسماعيلية")) {
+    return "ismailia";
+  }
+  if (cleaned.includes("damietta") || cleaned.includes("دمياط")) {
+    return "damietta";
+  }
+  if (cleaned.includes("port") || cleaned.includes("بورسعيد")) {
+    return "portsaid";
+  }
+  if (cleaned.includes("مطروح") || cleaned.includes("matrouh")) {
+    return "matrouh";
+  }
+  
+  return cleaned;
+}
+
 export async function resolveBostaCityCode(cityName) {
-  const normalizedName = String(cityName || "").trim().toLowerCase();
-  if (!normalizedName) {
+  const normalizedInput = normalizeCityName(cityName);
+  if (!normalizedInput) {
     return "";
   }
 
   const cities = await listBostaCities();
   const match = cities.find((city) => {
-    const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName]
+    const candidates = [city?.name, city?.displayName, city?.nameAr, city?.arabicName, city?.alias]
       .filter(Boolean)
-      .map((item) => String(item).trim().toLowerCase());
-    return candidates.includes(normalizedName);
+      .map((item) => normalizeCityName(item));
+    return candidates.includes(normalizedInput);
   });
 
-  return String(match?.code || match?._id || match?.id || "").trim();
+  return String(match?._id || match?.id || match?.code || "").trim();
+}
+
+export async function resolveBostaDistrict(cityId, cityName, fullAddress) {
+  if (!cityId) return "";
+  try {
+    const payload = await bostaRequest(`/cities/${cityId}/districts`);
+    const districts = payload?.data || [];
+    if (districts.length === 0) {
+      return "";
+    }
+    const cleanAddress = String(fullAddress || "").trim().toLowerCase()
+      .replace(/،/g, " ")
+      .replace(/,/g, " ")
+      .replace(/\s+/g, " ");
+      
+    // 1. Try to find a district name mentioned in the address
+    for (const dist of districts) {
+      const candidates = [dist.districtName, dist.districtOtherName]
+        .filter(Boolean)
+        .map(n => String(n).trim().toLowerCase());
+        
+      for (const cand of candidates) {
+        if (cand.length > 2 && cleanAddress.includes(cand)) {
+          return dist.districtName;
+        }
+      }
+    }
+    
+    // 2. Try to find a district name matching the city name
+    const cleanCity = String(cityName || "").trim().toLowerCase();
+    const cityMatch = districts.find(dist => {
+      const candidates = [dist.districtName, dist.districtOtherName, dist.zoneName, dist.zoneOtherName]
+        .filter(Boolean)
+        .map(n => String(n).trim().toLowerCase());
+      return candidates.includes(cleanCity);
+    });
+    if (cityMatch) {
+      return cityMatch.districtName;
+    }
+    
+    // 3. Fallback to the first district in the list
+    return districts[0].districtName;
+  } catch (err) {
+    console.error("resolveBostaDistrict failed:", err);
+    return "";
+  }
 }
 
 export async function getBostaHealth() {
@@ -148,10 +252,9 @@ export async function getBostaHealth() {
 function buildDropOffAddress(order, options = {}) {
 
   // =========================
-  // BOSTA CITY IDS
+  // BOSTA CITY IDS (ALL 28 EGYPT CITIES 100% COVERED)
   // =========================
   const cityMap = {
-
     // القاهرة
     "القاهرة": "FceDyHXwpSYYF9zGW",
     "القاهره": "FceDyHXwpSYYF9zGW",
@@ -261,6 +364,22 @@ function buildDropOffAddress(order, options = {}) {
     // السويس
     "السويس": "PickurJ5uJZ9rDTHW",
     "suez": "PickurJ5uJZ9rDTHW",
+
+    // الوادي الجديد
+    "الوادي الجديد": "w4yDVHVJWqa4HpbzA",
+    "new valley": "w4yDVHVJWqa4HpbzA",
+
+    // الساحل الشمالي
+    "الساحل الشمالي": "2hGtNLfRgqGrJjnW9",
+    "north coast": "2hGtNLfRgqGrJjnW9",
+
+    // شمال سيناء
+    "شمال سيناء": "ZuCaDAVQlPT",
+    "north sinai": "ZuCaDAVQlPT",
+
+    // جنوب سيناء
+    "جنوب سيناء": "nG_c44vHQht",
+    "south sinai": "nG_c44vHQht",
   };
 
   // =========================
@@ -346,6 +465,7 @@ function buildDropOffAddress(order, options = {}) {
   // =========================
 
   const cityId =
+    options.cityId ||
     cityMap[cityName] ||
     "FceDyHXwpSYYF9zGW";
 
@@ -363,6 +483,7 @@ function buildDropOffAddress(order, options = {}) {
     cityId,
   };
 }
+
 export async function createBostaShipmentFromOrder(order, options = {}) {
   if (!order) {
     throw createHttpError("Order is required to create a Bosta shipment.", 400);
@@ -381,6 +502,12 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
     );
   }
 
+  // Resolve district automatically if not provided
+  let resolvedDistrict = options.district || order.customerDistrict || order.shippingDistrict || order.district || "";
+  if (!resolvedDistrict) {
+    resolvedDistrict = await resolveBostaDistrict(cityCode, order.customerCity, order.customerAddress);
+  }
+
   const payload = {
     type: 10,
     notes: String(options.notes || env.bostaDefaultNotes || order.customerNotes || "").trim(),
@@ -392,7 +519,7 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
       phone: String(order.customerPhone || "").trim(),
       email: String(order.customerEmail || "").trim(),
     },
-    dropOffAddress: buildDropOffAddress(order),
+    dropOffAddress: buildDropOffAddress(order, { ...options, district: resolvedDistrict, cityId: cityCode }),
   };
 
   if (env.bostaPickupLocationId) {

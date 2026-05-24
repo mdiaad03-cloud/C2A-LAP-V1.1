@@ -20,6 +20,125 @@ async function syncSalesExcelSafe(sales) {
   }
 }
 
+export const DEFAULT_TEMPLATES = {
+  order_confirmation: `━━━━━━━━━━━━━━━━━
+🛒 *طلب جديد من C2A LAP*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+تم استلام طلبك بنجاح! ✅
+
+📋 *تفاصيل الطلب:*
+▫️ رقم الطلب: *{orderNumber}*
+▫️ طريقة الدفع: {paymentLabel}
+
+🛍️ *المنتجات:*
+{itemsList}
+
+💰 *الإجمالي: {total} ج.م*
+
+━━━━━━━━━━━━━━━━━
+📌 *لتأكيد الطلب:*
+    أرسل *1* أو اكتب *تأكيد*
+
+❌ *لإلغاء الطلب:*
+    أرسل *2* أو اكتب *إلغاء*
+━━━━━━━━━━━━━━━━━
+
+⏳ سيتم إلغاء الطلب تلقائياً في حال عدم التأكيد خلال 24 ساعة.
+شكراً لثقتك بنا! 💙`,
+
+  order_confirmed: `━━━━━━━━━━━━━━━━━
+✅ *تأكيد الطلب - C2A LAP*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+تم تأكيد طلبك بنجاح! 🎉
+
+📋 رقم الطلب: *{orderNumber}*
+💰 الإجمالي: *{total} ج.م*
+
+📦 جاري تجهيز طلبك للشحن وسنعلمك فور إرساله.
+
+شكراً لثقتك بنا! 💙`,
+
+  order_shipped: `━━━━━━━━━━━━━━━━━
+🚚 *تم شحن طلبك - C2A LAP*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+طلبك رقم *{orderNumber}* في الطريق إليك! 📦
+{carrierLine}
+{trackingLine}
+{trackingUrlLine}
+
+━━━━━━━━━━━━━━━━━
+نشكرك لتسوقك معنا! 💙`,
+
+  order_delivered: `━━━━━━━━━━━━━━━━━
+📦 *تم التوصيل - C2A LAP*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+تم توصيل طلبك رقم *{orderNumber}* بنجاح! 🎉
+
+نتمنى أن تنال منتجاتنا رضاكم ⭐
+لو عندك أي استفسار، تواصل معنا في أي وقت.
+
+━━━━━━━━━━━━━━━━━
+شكراً لاختيارك *C2A LAP*! 💻💙`,
+
+  order_cancelled: `━━━━━━━━━━━━━━━━━
+❌ *إلغاء طلب - C2A LAP*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+تم إلغاء طلبك رقم *{orderNumber}*.
+
+لو الإلغاء غير مقصود أو عندك أي استفسار، تواصل معنا وهنساعدك فوراً.
+
+━━━━━━━━━━━━━━━━━
+فريق *C2A LAP* 💙`
+};
+
+export function replaceTemplateVariables(template, order) {
+  const paymentLabel = order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام 💵" : "تم الدفع إلكترونياً 💳";
+  const itemsList = (order.items || [])
+    .map((item, i) => `  ${i + 1}. ${item.laptopName || item.name || "منتج"} × ${item.quantity}`)
+    .join("\n");
+  
+  const totalStr = Number(order.total || 0).toLocaleString("ar-EG");
+  
+  const carrierLine = order.shippingCompanyName ? `🏢 شركة الشحن: *${order.shippingCompanyName}*` : "";
+  const trackingLine = order.trackingNumber ? `🔢 رقم التتبع: *${order.trackingNumber}*` : "";
+  const trackingUrlLine = order.trackingNumber ? `🔗 تتبع شحنتك:\nhttps://bosta.co/tracking-shipment/?track_num=${order.trackingNumber}` : "";
+
+  return template
+    .replace(/{customerName}/g, order.customerName || "")
+    .replace(/{orderNumber}/g, order.orderNumber || "")
+    .replace(/{paymentLabel}/g, paymentLabel)
+    .replace(/{itemsList}/g, itemsList)
+    .replace(/{total}/g, totalStr)
+    .replace(/{carrierLine}/g, carrierLine)
+    .replace(/{trackingLine}/g, trackingLine)
+    .replace(/{trackingUrlLine}/g, trackingUrlLine);
+}
+
+export async function sendWhatsAppAdminAlert(messageText) {
+  const adminPhone = "01068646465";
+  try {
+    await sendWhatsAppMessage(adminPhone, messageText, "SYSTEM_ADMIN_ALERT");
+    console.log(`[WhatsApp Admin Alert] Notification sent to admin (${adminPhone})`);
+  } catch (err) {
+    console.error("[WhatsApp Admin Alert] Failed to send alert to admin:", err.message);
+  }
+}
+
 // Clean phone numbers to compare them accurately
 export function cleanPhone(phone) {
   return String(phone || "")
@@ -98,39 +217,9 @@ export async function sendWhatsAppMessage(phone, text, orderId = null) {
 }
 
 export async function sendOrderConfirmationMessage(order) {
-  const paymentLabel = order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام 💵" : "تم الدفع إلكترونياً 💳";
-  const itemsList = (order.items || [])
-    .map((item, i) => `  ${i + 1}. ${item.laptopName || item.name || "منتج"} × ${item.quantity}`)
-    .join("\n");
-
-  const messageText = `━━━━━━━━━━━━━━━━━
-🛒 *طلب جديد من C2A LAP*
-━━━━━━━━━━━━━━━━━
-
-مرحباً *${order.customerName}* 👋
-
-تم استلام طلبك بنجاح! ✅
-
-📋 *تفاصيل الطلب:*
-▫️ رقم الطلب: *${order.orderNumber}*
-▫️ طريقة الدفع: ${paymentLabel}
-
-🛍️ *المنتجات:*
-${itemsList}
-
-💰 *الإجمالي: ${Number(order.total).toLocaleString("ar-EG")} ج.م*
-
-━━━━━━━━━━━━━━━━━
-📌 *لتأكيد الطلب:*
-    أرسل *1* أو اكتب *تأكيد*
-
-❌ *لإلغاء الطلب:*
-    أرسل *2* أو اكتب *إلغاء*
-━━━━━━━━━━━━━━━━━
-
-⏳ سيتم إلغاء الطلب تلقائياً في حال عدم التأكيد خلال 24 ساعة.
-شكراً لثقتك بنا! 💙`;
-
+  const db = await getDb();
+  const template = db.whatsappTemplates?.order_confirmation || DEFAULT_TEMPLATES.order_confirmation;
+  const messageText = replaceTemplateVariables(template, order);
   return sendWhatsAppMessage(order.customerPhone, messageText, order.id);
 }
 
@@ -202,6 +291,15 @@ export async function receiveCustomerReply(phone, text) {
       if (salesChanged) {
         await syncSalesExcelSafe(db.sales);
       }
+
+      // Notify admin about automatic confirmation
+      const adminAlertText = `✅ *تم تأكيد الطلب من العميل تلقائياً*
+📋 طلب رقم: *${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*`;
+      await sendWhatsAppAdminAlert(adminAlertText);
+
     } else if (isCancel) {
       // Cancel the order
       order.status = ORDER_STATUSES.cancelled;
@@ -232,6 +330,15 @@ export async function receiveCustomerReply(phone, text) {
       replyText = `تم إلغاء طلبك رقم ${order.orderNumber} بناءً على طلبك. نأمل أن نخدمك في المرة القادمة.`;
 
       await saveDb();
+
+      // Notify admin about automatic cancellation
+      const adminAlertText = `❌ *تم إلغاء الطلب من العميل تلقائياً*
+📋 طلب رقم: *${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*`;
+      await sendWhatsAppAdminAlert(adminAlertText);
+
     } else {
       replyText = `لم نتمكن من فهم ردك. عذراً!
 لتأكيد طلبك رقم ${order.orderNumber}، أرسل "1" أو "تأكيد".
@@ -273,74 +380,41 @@ export async function receiveCustomerReply(phone, text) {
 
 export async function sendOrderStatusMessage(order, previousStatus) {
   const status = String(order.status || "").toLowerCase();
-  let messageText = "";
+  const db = await getDb();
+  let templateKey = "";
 
-  if (status === "confirmed") {
-    messageText = `━━━━━━━━━━━━━━━━━
-✅ *تأكيد الطلب - C2A LAP*
-━━━━━━━━━━━━━━━━━
+  if (status === "confirmed") templateKey = "order_confirmed";
+  else if (status === "shipped") templateKey = "order_shipped";
+  else if (status === "delivered") templateKey = "order_delivered";
+  else if (status === "cancelled") templateKey = "order_cancelled";
+  else return null;
 
-مرحباً *${order.customerName}* 👋
+  const template = db.whatsappTemplates?.[templateKey] || DEFAULT_TEMPLATES[templateKey];
+  const messageText = replaceTemplateVariables(template, order);
 
-تم تأكيد طلبك بنجاح! 🎉
+  // Send message to customer
+  const result = await sendWhatsAppMessage(order.customerPhone, messageText, order.id);
 
-📋 رقم الطلب: *${order.orderNumber}*
-💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*
+  // Send status alert to admin
+  const statusLabels = {
+    pending: "معلق ⏳",
+    confirmed: "مؤكد ✅",
+    shipped: "تم الشحن 🚚",
+    delivered: "تم التسليم 📦",
+    cancelled: "ملغي ❌",
+  };
+  const currentLabel = statusLabels[status] || status;
+  const prevLabel = statusLabels[previousStatus] || previousStatus;
 
-📦 جاري تجهيز طلبك للشحن وسنعلمك فور إرساله.
+  const adminAlertText = `🔄 *تحديث حالة الطلب*
+📋 طلب رقم: *${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+📈 الحالة: *${prevLabel}* 👈 *${currentLabel}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*`;
+  await sendWhatsAppAdminAlert(adminAlertText);
 
-شكراً لثقتك بنا! 💙`;
-
-  } else if (status === "shipped") {
-    const carrierLine = order.shippingCompanyName ? `\n🏢 شركة الشحن: *${order.shippingCompanyName}*` : "";
-    const trackingLine = order.trackingNumber ? `\n🔢 رقم التتبع: *${order.trackingNumber}*` : "";
-    const trackingUrl = order.trackingNumber ? `\n🔗 تتبع شحنتك:\nhttps://bosta.co/tracking-shipment/?track_num=${order.trackingNumber}` : "";
-
-    messageText = `━━━━━━━━━━━━━━━━━
-🚚 *تم شحن طلبك - C2A LAP*
-━━━━━━━━━━━━━━━━━
-
-مرحباً *${order.customerName}* 👋
-
-طلبك رقم *${order.orderNumber}* في الطريق إليك! 📦${carrierLine}${trackingLine}${trackingUrl}
-
-━━━━━━━━━━━━━━━━━
-نشكرك لتسوقك معنا! 💙`;
-
-  } else if (status === "delivered") {
-    messageText = `━━━━━━━━━━━━━━━━━
-📦 *تم التوصيل - C2A LAP*
-━━━━━━━━━━━━━━━━━
-
-مرحباً *${order.customerName}* 👋
-
-تم توصيل طلبك رقم *${order.orderNumber}* بنجاح! 🎉
-
-نتمنى أن تنال منتجاتنا رضاكم ⭐
-لو عندك أي استفسار، تواصل معنا في أي وقت.
-
-━━━━━━━━━━━━━━━━━
-شكراً لاختيارك *C2A LAP*! 💻💙`;
-
-  } else if (status === "cancelled") {
-    messageText = `━━━━━━━━━━━━━━━━━
-❌ *إلغاء طلب - C2A LAP*
-━━━━━━━━━━━━━━━━━
-
-مرحباً *${order.customerName}* 👋
-
-تم إلغاء طلبك رقم *${order.orderNumber}*.
-
-لو الإلغاء غير مقصود أو عندك أي استفسار، تواصل معنا وهنساعدك فوراً.
-
-━━━━━━━━━━━━━━━━━
-فريق *C2A LAP* 💙`;
-
-  } else {
-    return null;
-  }
-
-  return sendWhatsAppMessage(order.customerPhone, messageText, order.id);
+  return result;
 }
 
 export async function autoConfigureUltraMsgWebhook() {
@@ -376,4 +450,3 @@ export async function autoConfigureUltraMsgWebhook() {
     console.error("[UltraMsg Webhook] ❌ Failed to auto-configure webhook:", error?.response?.data || error.message);
   }
 }
-

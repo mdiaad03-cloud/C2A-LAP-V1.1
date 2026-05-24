@@ -128,6 +128,14 @@ router.post(
         } catch (mailError) {
           console.error(`BOSTA WEBHOOK: Email failed for ${order.orderNumber}:`, mailError.message);
         }
+
+        // WhatsApp notification webhook state update (Notify Customer & Admin Alert)
+        try {
+          const { sendOrderStatusMessage } = await import("../services/whatsappService.js");
+          await sendOrderStatusMessage(order, previousStatus);
+        } catch (whatsappError) {
+          console.error(`BOSTA WEBHOOK: WhatsApp notification failed for ${order.orderNumber}:`, whatsappError.message);
+        }
       }
     } catch (err) {
       console.error("BOSTA WEBHOOK: Processing error:", err.message, err.stack);
@@ -417,6 +425,14 @@ router.post(
       }
     }
 
+    // Send shipment updates to WhatsApp customer and admin
+    try {
+      const { sendOrderStatusMessage } = await import("../services/whatsappService.js");
+      await sendOrderStatusMessage(order, previousStatus);
+    } catch (whatsappError) {
+      console.error(`Bosta shipment WhatsApp notification failed for ${order.orderNumber}:`, whatsappError.message);
+    }
+
     await addLog({
       action: "create",
       module: "shipping",
@@ -493,6 +509,14 @@ router.post(
           await sendOrderStatusEmail({ order, previousStatus });
         } catch (mailError) {
           console.error(`Bosta sync status email failed for ${order.orderNumber}:`, mailError);
+        }
+
+        // WhatsApp update for status sync change
+        try {
+          const { sendOrderStatusMessage } = await import("../services/whatsappService.js");
+          await sendOrderStatusMessage(order, previousStatus);
+        } catch (whatsappError) {
+          console.error(`Bosta status sync WhatsApp notification failed:`, whatsappError.message);
         }
       }
 
