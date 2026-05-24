@@ -347,6 +347,9 @@ app.use((req, res, next) => {
 
   const resolvedPath = path.join(clientDist, "index.html");
   console.log("Attempting to sendFile:", resolvedPath);
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   return res.sendFile(resolvedPath, { dotfiles: 'allow' }, (error) => {
     if (error) {
       console.error("sendFile error details:", error);
