@@ -346,7 +346,10 @@ export async function sendOrderStatusMessage(order, previousStatus) {
 export async function autoConfigureUltraMsgWebhook() {
   const instanceId = env.ultramsgInstanceId;
   const token = env.ultramsgToken;
-  const storeBaseUrl = env.storeBaseUrl || "https://c2a-lap-v11-production.up.railway.app";
+  let storeBaseUrl = env.storeBaseUrl || "";
+  if (!storeBaseUrl || storeBaseUrl.includes("localhost") || storeBaseUrl.includes("127.0.0.1")) {
+    storeBaseUrl = "https://c2a-lap-v11-production.up.railway.app";
+  }
   
   if (!instanceId || !token) {
     console.log("[UltraMsg Webhook] Skipping auto-configuration: Credentials not fully set.");
