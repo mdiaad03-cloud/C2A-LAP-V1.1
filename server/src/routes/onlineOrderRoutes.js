@@ -1,4 +1,7 @@
 import { Router } from "express";
+import multer from "multer";
+import fs from "node:fs";
+import path from "node:path";
 import { nanoid } from "nanoid";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate, authorize, csrfProtect } from "../middleware/auth.js";
@@ -23,6 +26,40 @@ import { nowIso } from "../utils/dateUtils.js";
 import { asOptionalText } from "../utils/validation.js";
 
 const router = Router();
+
+const uploadDir = path.resolve("uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const screenshotDir = path.join(uploadDir, "screenshots");
+if (!fs.existsSync(screenshotDir)) {
+  fs.mkdirSync(screenshotDir, { recursive: true });
+}
+
+const screenshotUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, screenshotDir),
+    filename: (req, file, cb) => {
+      const extension = path.extname(file.originalname || "").toLowerCase();
+      const safeExtension = [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(extension)
+        ? extension
+        : ".jpg";
+      cb(null, `${Date.now()}-${nanoid(8)}${safeExtension}`);
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 3,
+  },
+  fileFilter: (req, file, callback) => {
+    const mime = String(file.mimetype || "").toLowerCase();
+    if (mime.startsWith("image/")) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error("Only image files are allowed."));
+  },
+});
 
 router.use(authenticate, csrfProtect);
 
@@ -109,6 +146,9 @@ router.put(
     }
     if (req.body.paymentStatus !== undefined) {
       order.paymentStatus = asOptionalText(req.body.paymentStatus) || order.paymentStatus || "pending_collection";
+    }
+    if (req.body.screenshotUrls !== undefined) {
+      order.screenshotUrls = Array.isArray(req.body.screenshotUrls) ? req.body.screenshotUrls : [];
     }
 
     let salesChanged = false;
@@ -222,6 +262,39 @@ router.put(
     });
 
     res.json({ order });
+  }),
+);
+
+router.post(
+  "/:id/screenshot",
+  authorize("admin", "sales"),
+  screenshotUpload.array("screenshots", 3),
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    const order = db.onlineOrders.find((entry) => entry.id === req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Online order not found." });
+    }
+
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+    if (uploadedFiles.length === 0) {
+      return res.status(400).json({ error: "At least one screenshot image is required." });
+    }
+
+    const nextUrls = uploadedFiles.map((file) => `/uploads/screenshots/${path.basename(file.path)}`);
+    order.screenshotUrls = [...(order.screenshotUrls || []), ...nextUrls].slice(0, 5);
+    order.updatedAt = nowIso();
+    await saveDb();
+
+    await addLog({
+      action: "upload",
+      module: "online-orders",
+      user: req.user,
+      details: `Uploaded ${uploadedFiles.length} payment screenshot(s) to order ${order.orderNumber}`,
+      ip: req.ip,
+    });
+
+    res.status(201).json({ success: true, screenshotUrls: order.screenshotUrls, order });
   }),
 );
 
