@@ -199,7 +199,7 @@ const validateCouponHandler = asyncHandler(async (req, res) => {
 
 router.get("/discount/check/:code", validateCouponHandler);
 router.get("/coupons/validate/:code", validateCouponHandler);
-router.post("/discount/apply", validateCouponHandler);
+router.post("/verify-code", validateCouponHandler);
 
 router.get(
   "/diagnostics/view",
