@@ -39,7 +39,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const db = await getDb();
 
-    const visibleOrders = req.user.role === "admin"
+    const visibleOrders = (req.user.role === "admin" || req.user.role === "sales")
       ? db.onlineOrders
       : db.onlineOrders.filter((order) => order.assignedEmployeeId === req.user.id);
 
@@ -63,7 +63,7 @@ router.get(
 
 router.put(
   "/:id",
-  authorize("admin"),
+  authorize("admin", "sales"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
     const order = db.onlineOrders.find((entry) => entry.id === req.params.id);
