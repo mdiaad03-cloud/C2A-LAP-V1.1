@@ -1,3 +1,4 @@
+import axios from "axios";
 import { nanoid } from "nanoid";
 import { getDb, saveDb } from "../data/db.js";
 import { nowIso } from "../utils/dateUtils.js";
@@ -27,6 +28,47 @@ export function cleanPhone(phone) {
     .replace(/^20/, "0");
 }
 
+// Format phone number for WhatsApp international format (Egyptian numbers)
+export function formatForWhatsApp(phone) {
+  let cleaned = String(phone || "").replace(/[^\d+]/g, "");
+  // Remove leading + if present
+  cleaned = cleaned.replace(/^\+/, "");
+  // Egyptian local format: 01xxxxxxxxx -> 201xxxxxxxxx
+  if (/^0\d{10}$/.test(cleaned)) {
+    cleaned = "2" + cleaned;
+  }
+  // Already in 201... format
+  if (/^20\d{10}$/.test(cleaned)) {
+    return cleaned;
+  }
+  return cleaned;
+}
+
+async function sendViaUltraMsg(phone, text) {
+  const instanceId = env.ultramsgInstanceId;
+  const token = env.ultramsgToken;
+  if (!instanceId || !token) {
+    return null; // No credentials, skip real sending
+  }
+  try {
+    const whatsappPhone = formatForWhatsApp(phone);
+    const response = await axios.post(
+      `https://api.ultramsg.com/${instanceId}/messages/chat`,
+      {
+        token,
+        to: whatsappPhone,
+        body: text,
+      },
+      { timeout: 15000 }
+    );
+    console.log(`[UltraMsg] Message sent to ${whatsappPhone}:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`[UltraMsg] Failed to send to ${phone}:`, error?.response?.data || error.message);
+    return null;
+  }
+}
+
 export async function sendWhatsAppMessage(phone, text, orderId = null) {
   const db = await getDb();
   db.whatsappLogs = db.whatsappLogs || [];
@@ -45,8 +87,12 @@ export async function sendWhatsAppMessage(phone, text, orderId = null) {
   db.whatsappLogs = db.whatsappLogs.slice(0, 1000);
   await saveDb();
 
-  // Print to server console for simulation debugging
-  console.log(`\n--- [WhatsApp Bot Sent to ${phone}] ---\n${text}\n---------------------------------------\n`);
+  // Try to send via UltraMsg if credentials are configured
+  const ultraResult = await sendViaUltraMsg(phone, text);
+  if (!ultraResult) {
+    // Fallback: Print to server console for simulation debugging
+    console.log(`\n--- [WhatsApp Bot Sent to ${phone}] ---\n${text}\n---------------------------------------\n`);
+  }
 
   return message;
 }

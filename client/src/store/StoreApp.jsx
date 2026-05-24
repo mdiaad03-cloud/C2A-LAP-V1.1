@@ -3218,6 +3218,7 @@ function StoreAccountPage() {
     logoutCustomer,
     customerOrders,
     customerOrderStats,
+    refreshCustomerOrders,
     tr,
     formatPrice,
     setCurrency,
@@ -3235,6 +3236,43 @@ function StoreAccountPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [authAvatarUploading, setAuthAvatarUploading] = useState(false);
   const [profileAvatarUploading, setProfileAvatarUploading] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
+
+  // Check if an order is eligible for customer cancellation (pending/confirmed + within 24h)
+  function canCancelOrder(order) {
+    const status = String(order.status || "").toLowerCase();
+    if (status !== "pending" && status !== "confirmed") return false;
+    const createdAt = new Date(order.createdAt || 0);
+    const hoursSince = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+    return hoursSince <= 24;
+  }
+
+  async function handleCancelOrder(order) {
+    const confirmMsg = isArabic
+      ? `هل أنت متأكد من إلغاء الطلب رقم ${order.orderNumber}؟ لا يمكن التراجع عن هذا الإجراء.`
+      : `Are you sure you want to cancel order ${order.orderNumber}? This action cannot be undone.`;
+    if (!window.confirm(confirmMsg)) return;
+    setCancellingOrderId(order.orderNumber);
+    try {
+      const token = localStorage.getItem("c2a_customer_token") || sessionStorage.getItem("c2a_customer_token");
+      const csrf = localStorage.getItem("c2a_customer_csrf") || sessionStorage.getItem("c2a_customer_csrf");
+      await customerApi.post(`/orders/${order.orderNumber}/cancel`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-csrf-token": csrf || "",
+        },
+      });
+      toast.success(tr("Order cancelled successfully.", "تم إلغاء الطلب بنجاح."));
+      await refreshCustomerOrders();
+    } catch (error) {
+      const errMsg = error?.response?.data?.errorAr && isArabic
+        ? error.response.data.errorAr
+        : getErrorMessage(error, tr("Failed to cancel order.", "فشل في إلغاء الطلب."));
+      toast.error(errMsg);
+    } finally {
+      setCancellingOrderId(null);
+    }
+  }
 
   const [authForm, setAuthForm] = useState({
     name: "",
@@ -3626,6 +3664,19 @@ function StoreAccountPage() {
                           );
                         })}
                       </ul>
+                      {canCancelOrder(order) && (
+                        <button
+                          type="button"
+                          className="store-danger-btn"
+                          style={{ marginTop: "10px", padding: "8px 16px", fontSize: "0.85rem" }}
+                          disabled={cancellingOrderId === order.orderNumber}
+                          onClick={() => handleCancelOrder(order)}
+                        >
+                          {cancellingOrderId === order.orderNumber
+                            ? tr("Cancelling...", "جاري الإلغاء...")
+                            : tr("Cancel Order", "إلغاء الطلب")}
+                        </button>
+                      )}
                     </article>
                   ))
                 )}

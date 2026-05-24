@@ -2,7 +2,7 @@
   "meta": {
     "app": "C2A LAP Sales Management",
     "createdAt": "2026-02-28T13:45:42.870Z",
-    "updatedAt": "2026-05-23T22:50:28.164Z"
+    "updatedAt": "2026-05-24T00:06:42.087Z"
   },
   "users": [
     {
@@ -2495,6 +2495,41 @@
       "createdAt": "2026-05-23T19:32:02.887Z",
       "updatedAt": "2026-05-23T19:32:02.887Z",
       "isFirstOrderOnly": true
+    },
+    {
+      "id": "gmc2L3EBl9VN82Id33Dak",
+      "code": "WELCOME100",
+      "type": "fixed",
+      "value": 100,
+      "usageLimit": 0,
+      "usageCount": 0,
+      "isActive": true,
+      "createdAt": "2026-05-24T00:06:41.508Z",
+      "updatedAt": "2026-05-24T00:06:41.508Z",
+      "isFirstOrderOnly": false
+    },
+    {
+      "id": "Bw8M1NUSryU_naaBlSPh8",
+      "code": "C2A10",
+      "type": "percent",
+      "value": 10,
+      "usageLimit": 0,
+      "usageCount": 0,
+      "isActive": true,
+      "createdAt": "2026-05-24T00:06:41.508Z",
+      "updatedAt": "2026-05-24T00:06:41.508Z",
+      "isFirstOrderOnly": false
+    }
+  ],
+  "whatsappLogs": [
+    {
+      "id": "_Au9G0IldPv7DzB0fN1AX",
+      "phone": "01068646465",
+      "rawPhone": "01068646465",
+      "text": "عزيزنا محمد ضياء،\n\nشكراً لطلبك من C2A LAP! 🎉\nرقم طلبك هو: C2A-ON-20260523-0003\nإجمالي الطلب: 21150 ج.م (الدفع: بطاقة/محفظة)\n\nلتأكيد طلبك وتجهيز الشحن فوراً، يرجى الضغط على الرابط التالي:\n🔗 http://localhost:5001/confirm-order?id=E-oT-xe6IMpM2DI5tJmS2\n\nأو أجب على هذه الرسالة بـ \"1\" أو \"تأكيد\" لتأكيد الطلب.\nلإلغاء الطلب، أرسل \"2\" أو \"إلغاء\".",
+      "direction": "outgoing",
+      "createdAt": "2026-05-24T00:06:42.087Z",
+      "orderId": "E-oT-xe6IMpM2DI5tJmS2"
     }
   ]
 }

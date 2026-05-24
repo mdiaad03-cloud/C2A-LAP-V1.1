@@ -34,5 +34,7 @@ export const env = {
   bostaDefaultNotes: process.env.BOSTA_DEFAULT_NOTES || "",
   bostaWebhookUrl: process.env.BOSTA_WEBHOOK_URL || "",
   bostaWebhookAuthKey: process.env.BOSTA_WEBHOOK_AUTH_KEY || "",
+  ultramsgInstanceId: process.env.ULTRAMSG_INSTANCE_ID || "",
+  ultramsgToken: process.env.ULTRAMSG_TOKEN || "",
   disableRateLimits: String(process.env.DISABLE_RATE_LIMITS || "").toLowerCase() === "true",
 };

@@ -22,6 +22,15 @@ import {
   sanitizeText,
 } from "../utils/validation.js";
 
+import {
+  ORDER_STATUSES,
+  buildOrderStatusHistory,
+  restoreOrderStock,
+  removeOnlineOrderSales,
+} from "../services/onlineOrderService.js";
+import { sendOrderStatusEmail } from "../services/emailService.js";
+import { sendOrderStatusMessage } from "../services/whatsappService.js";
+
 const router = Router();
 
 const avatarUploadDir = path.resolve("uploads", "avatars");
@@ -662,6 +671,112 @@ router.get(
     }
     res.json({ user: publicUser(user) });
   }),
+);
+
+// --- Customer 24-hour self-service cancellation ---
+router.post(
+  "/orders/:orderNumber/cancel",
+  authenticate,
+  authorize("customer"),
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    const user = db.users.find((entry) => entry.id === req.user.id && entry.role === "customer");
+    if (!user) {
+      return res.status(404).json({ error: "Customer not found." });
+    }
+
+    const order = (db.onlineOrders || []).find(
+      (o) =>
+        o.orderNumber === req.params.orderNumber &&
+        (o.customerId === user.id ||
+          (user.email &&
+            String(o.customerEmail || "").toLowerCase() === String(user.email).toLowerCase()))
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    // Only pending or confirmed orders can be cancelled by the customer
+    const cancellableStatuses = ["pending", "confirmed"];
+    if (!cancellableStatuses.includes(String(order.status || "").toLowerCase())) {
+      return res.status(400).json({
+        error: "This order cannot be cancelled. Only pending or confirmed orders can be cancelled.",
+        errorAr: "لا يمكن إلغاء هذا الطلب. فقط الطلبات المعلقة أو المؤكدة يمكن إلغاؤها.",
+      });
+    }
+
+    // Check 24-hour window
+    const orderCreatedAt = new Date(order.createdAt || 0);
+    const now = new Date();
+    const hoursSinceCreation = (now - orderCreatedAt) / (1000 * 60 * 60);
+
+    if (hoursSinceCreation > 24) {
+      return res.status(400).json({
+        error: "Cancellation window has expired. Orders can only be cancelled within 24 hours of placement.",
+        errorAr: "انتهت فترة الإلغاء. يمكن إلغاء الطلبات خلال 24 ساعة فقط من وقت الطلب.",
+      });
+    }
+
+    const previousStatus = order.status;
+
+    // Update order status
+    order.status = ORDER_STATUSES.cancelled || "cancelled";
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.unshift(
+      buildOrderStatusHistory(order.status, { id: user.id, name: user.name || "Customer" })
+    );
+
+    // Restore stock
+    if (!order.stockRestoredAt) {
+      restoreOrderStock(db, order);
+      order.stockRestoredAt = nowIso();
+    }
+
+    // Remove sales entries
+    removeOnlineOrderSales(db, order);
+
+    order.cancelledAt = nowIso();
+    order.cancelledBy = "customer";
+    order.shippingStatus = "cancelled";
+    order.updatedAt = nowIso();
+
+    // Add notification for admin
+    db.notifications = db.notifications || [];
+    db.notifications.unshift({
+      id: nanoid(),
+      title: `Order ${order.orderNumber} cancelled by customer`,
+      message: `Customer ${user.name} cancelled order ${order.orderNumber} (self-service within 24h).`,
+      createdAt: nowIso(),
+      createdBy: user.id,
+      createdByName: user.name,
+    });
+    db.notifications = db.notifications.slice(0, 200);
+
+    await saveDb();
+
+    // Send cancellation notifications (fire and forget)
+    try {
+      await sendOrderStatusEmail({ order, previousStatus });
+    } catch (emailErr) {
+      console.error("Cancel email failed:", emailErr.message);
+    }
+    try {
+      await sendOrderStatusMessage(order, previousStatus);
+    } catch (waErr) {
+      console.error("Cancel WhatsApp failed:", waErr.message);
+    }
+
+    await addLog({
+      action: "cancel",
+      module: "customer-orders",
+      user,
+      details: `Customer cancelled order ${order.orderNumber}`,
+      ip: req.ip,
+    });
+
+    res.json({ success: true, order });
+  })
 );
 
 export default router;

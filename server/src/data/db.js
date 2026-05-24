@@ -266,6 +266,34 @@ async function seedDefaults() {
       isFirstOrderOnly: true,
     });
   }
+  if (!db.coupons.some((c) => c.code.toUpperCase() === "WELCOME100")) {
+    db.coupons.push({
+      id: nanoid(),
+      code: "WELCOME100",
+      type: "fixed",
+      value: 100,
+      usageLimit: 0,
+      usageCount: 0,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      isFirstOrderOnly: false,
+    });
+  }
+  if (!db.coupons.some((c) => c.code.toUpperCase() === "C2A10")) {
+    db.coupons.push({
+      id: nanoid(),
+      code: "C2A10",
+      type: "percent",
+      value: 10,
+      usageLimit: 0,
+      usageCount: 0,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      isFirstOrderOnly: false,
+    });
+  }
 
   db.meta.updatedAt = nowIso();
   await dbInstance.write();
