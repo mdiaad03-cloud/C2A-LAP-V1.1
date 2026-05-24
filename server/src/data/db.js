@@ -6,6 +6,57 @@ import { nanoid } from "nanoid";
 import { JSONFilePreset } from "lowdb/node";
 import { initialShippingCompanies, initialUsers } from "./seed.js";
 import { nowIso } from "../utils/dateUtils.js";
+import { MongoClient } from "mongodb";
+
+// ============ MongoDB Cloud Sync ============
+let mongoClient = null;
+let mongoCollection = null;
+
+async function connectMongo() {
+  const uri = process.env.MONGODB_URI || "";
+  if (!uri) return false;
+  try {
+    mongoClient = new MongoClient(uri);
+    await mongoClient.connect();
+    const db = mongoClient.db("c2a_lap");
+    mongoCollection = db.collection("app_state");
+    console.log("[DB] ✅ MongoDB Atlas connected — data will persist across deploys!");
+    return true;
+  } catch (err) {
+    console.error("[DB] ❌ MongoDB connection failed:", err.message);
+    mongoClient = null;
+    mongoCollection = null;
+    return false;
+  }
+}
+
+async function loadFromMongo() {
+  if (!mongoCollection) return null;
+  try {
+    const doc = await mongoCollection.findOne({ _id: "main_db" });
+    if (doc && doc.data) {
+      console.log(`[DB] Restored data from MongoDB (updated: ${doc.data?.meta?.updatedAt || "unknown"})`);
+      return doc.data;
+    }
+  } catch (err) {
+    console.error("[DB] MongoDB load failed:", err.message);
+  }
+  return null;
+}
+
+async function saveToMongo(data) {
+  if (!mongoCollection) return;
+  try {
+    await mongoCollection.replaceOne(
+      { _id: "main_db" },
+      { _id: "main_db", data, savedAt: new Date().toISOString() },
+      { upsert: true }
+    );
+  } catch (err) {
+    console.error("[DB] MongoDB save failed:", err.message);
+  }
+}
+// ============================================
 
 // Use Railway persistent volume if available, otherwise local path
 function resolveDataPath() {
@@ -143,6 +194,9 @@ export async function initializeDb() {
     return dbInstance;
   }
 
+  // Connect to MongoDB first (if URI is set)
+  await connectMongo();
+
   await fs.mkdir(path.dirname(dataPath), { recursive: true });
   dbInstance = await JSONFilePreset(dataPath, defaultData);
 
@@ -150,8 +204,27 @@ export async function initializeDb() {
     dbInstance.data = structuredClone(defaultData);
   }
 
+  // Try to restore from MongoDB cloud (if local data is empty/default)
+  const cloudData = await loadFromMongo();
+  if (cloudData) {
+    const localOrders = dbInstance.data.onlineOrders?.length || 0;
+    const cloudOrders = cloudData.onlineOrders?.length || 0;
+    const localUsers = dbInstance.data.users?.length || 0;
+    const cloudUsers = cloudData.users?.length || 0;
+
+    // Use cloud data if it has more content (local was wiped by deploy)
+    if (cloudOrders > localOrders || cloudUsers > localUsers) {
+      console.log(`[DB] Cloud data is newer (cloud: ${cloudOrders} orders, ${cloudUsers} users | local: ${localOrders} orders, ${localUsers} users). Restoring...`);
+      dbInstance.data = cloudData;
+      await dbInstance.write();
+    }
+  }
+
   await ensureRequiredCollections();
   await seedDefaults();
+
+  // Save initial state to MongoDB (including any new seeds)
+  await saveToMongo(dbInstance.data);
 
   return dbInstance;
 }
@@ -332,6 +405,8 @@ export async function saveDb() {
   writeQueue = writeQueue.then(async () => {
     try {
       await dbInstance.write();
+      // Also sync to MongoDB cloud
+      await saveToMongo(dbInstance.data);
     } catch (error) {
       console.error("Database save failed:", error);
       throw error;
