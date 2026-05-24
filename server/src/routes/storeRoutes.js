@@ -206,6 +206,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const db = await getDb();
     res.json({
+      coupons: db.coupons || [],
       latestLogs: (db.whatsappLogs || []).filter(l => l.rawPhone === "SYSTEM_DIAGNOSTIC").slice(0, 50)
     });
   })
