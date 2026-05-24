@@ -197,9 +197,14 @@ export default function App() {
 
     if (canViewSalesWorkspace) {
       base.push({ key: "dashboard", label: tr("Dashboard", "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645"), icon: LayoutDashboard });
-      base.push({ key: "sales", label: tr("Sales", "\u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a"), icon: BarChart3 });
+      base.push({ key: "sales", label: tr("Sales", "\u0627\u0644\u0645\u062b\u064a\u0639\u0627\u062a"), icon: BarChart3 });
       base.push({ key: "contacts", label: tr("Contacts", "\u0627\u0644\u0639\u0645\u0644\u0627\u0621"), icon: Contact });
-      base.push({ key: "products", label: tr("Products", "\u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a"), icon: Package });
+      base.push({ key: "products", label: tr("Products", "\u0645\u0646\u062a\u062c\u0627\u062a"), icon: Package });
+      base.push({
+        key: "onlineOrders",
+        label: tr("Online Orders", "\u0627\u0644\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629"),
+        icon: ShoppingCart,
+      });
       base.push({ key: "shipping", label: tr("Shipping", "\u0627\u0644\u0634\u062d\u0646"), icon: Truck });
     } else if (canManageProducts) {
       base.push({ key: "products", label: tr("Products", "\u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a"), icon: Package });
@@ -207,11 +212,6 @@ export default function App() {
 
     if (isAdmin) {
       base.push({ key: "profits", label: tr("Profits", "\u0627\u0644\u0623\u0631\u0628\u0627\u062d"), icon: FileText });
-      base.push({
-        key: "onlineOrders",
-        label: tr("Online Orders", "\u0627\u0644\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629"),
-        icon: ShoppingCart,
-      });
       base.push({ key: "coupons", label: tr("Coupons", "الكوبونات"), icon: Tag });
       base.push({ key: "agent", label: tr("Agent", "\u0627\u0644\u0625\u062c\u0646\u062a"), icon: Bot });
       base.push({ key: "storeSettings", label: tr("Store Settings", "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631"), icon: Settings });
@@ -260,6 +260,11 @@ export default function App() {
         tasks.push({ key: "sales", request: api.get("/sales", { params }), required: true });
         tasks.push({ key: "contacts", request: api.get("/contacts", { params: { query: contactQuery } }) });
         tasks.push({ key: "shipping", request: api.get("/shipping") });
+        tasks.push({
+          key: "onlineOrders",
+          request: api.get("/online-orders", { params: onlineFilters }),
+        });
+        tasks.push({ key: "users", request: api.get("/users") });
       }
 
       if (canBrowseProducts) {
@@ -267,13 +272,8 @@ export default function App() {
       }
 
       if (isAdmin) {
-        tasks.push({ key: "users", request: api.get("/users") });
         tasks.push({ key: "profits", request: api.get("/profits/summary", { params }) });
         tasks.push({ key: "logs", request: api.get("/logs", { params: { limit: 200 } }) });
-        tasks.push({
-          key: "onlineOrders",
-          request: api.get("/online-orders", { params: onlineFilters }),
-        });
         tasks.push({
           key: "support",
           request: api.get("/support/tickets", { params: supportFilters }),
@@ -318,22 +318,26 @@ export default function App() {
       setShippingCompanies(dataByKey.shipping?.shippingCompanies || []);
       setNotifications(dataByKey.notifications?.notifications || []);
 
-      if (isAdmin) {
-        setUsers(dataByKey.users?.users || []);
-        setProfitSummary(dataByKey.profits?.summary || null);
-        setLogs(dataByKey.logs?.logs || []);
+      if (canViewSalesWorkspace) {
         setOnlineOrders(dataByKey.onlineOrders?.orders || []);
         setOnlineAnalytics(dataByKey.onlineOrders?.analytics || null);
+        setUsers(dataByKey.users?.users || []);
+      } else {
+        setOnlineOrders([]);
+        setOnlineAnalytics(null);
+        setUsers([]);
+      }
+
+      if (isAdmin) {
+        setProfitSummary(dataByKey.profits?.summary || null);
+        setLogs(dataByKey.logs?.logs || []);
         setSupportTickets(dataByKey.support?.tickets || []);
         setSupportStats(dataByKey.support?.stats || null);
         setStoreSettings(dataByKey.storeSettings?.storeSettings || null);
         setCoupons(dataByKey.coupons?.coupons || []);
       } else {
-        setUsers([]);
         setProfitSummary(null);
         setLogs([]);
-        setOnlineOrders([]);
-        setOnlineAnalytics(null);
         setSupportTickets([]);
         setSupportStats(null);
         setStoreSettings(null);
@@ -749,7 +753,7 @@ export default function App() {
               />
             ) : null}
 
-            {activeTab === "onlineOrders" && isAdmin ? (
+            {activeTab === "onlineOrders" && canViewSalesWorkspace ? (
               <OnlineOrdersSection
                 orders={onlineOrders}
                 analytics={onlineAnalytics}

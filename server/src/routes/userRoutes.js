@@ -44,10 +44,11 @@ const avatarUpload = multer({
   },
 });
 
-router.use(authenticate, authorize("admin"), csrfProtect);
+router.use(authenticate, csrfProtect);
 
 router.get(
   "/",
+  authorize("admin", "sales"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
     res.json({ users: db.users.map(publicUser) });
@@ -56,6 +57,7 @@ router.get(
 
 router.post(
   "/avatar-upload",
+  authorize("admin"),
   avatarUpload.single("avatar"),
   asyncHandler(async (req, res) => {
     if (!req.file) {
@@ -69,6 +71,7 @@ router.post(
 
 router.post(
   "/",
+  authorize("admin"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
 
@@ -113,6 +116,7 @@ router.post(
 
 router.put(
   "/:id",
+  authorize("admin"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
     const user = db.users.find((entry) => entry.id === req.params.id);
@@ -158,6 +162,7 @@ router.put(
 
 router.delete(
   "/:id",
+  authorize("admin"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
     if (req.params.id === req.user.id) {
