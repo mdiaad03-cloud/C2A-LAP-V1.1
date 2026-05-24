@@ -369,6 +369,14 @@ async function bootstrap() {
     console.error("Failed to initialize backup scheduler:", scheduleErr);
   }
 
+  // Initialize auto-cancel scheduler for expired pending orders (cash on delivery)
+  try {
+    const { scheduleAutoCancelOrders } = await import("./services/autoCancelService.js");
+    scheduleAutoCancelOrders();
+  } catch (autoCancelErr) {
+    console.error("Failed to initialize auto-cancel scheduler:", autoCancelErr);
+  }
+
   const ports = [env.adminPort, env.storePort];
   const uniquePorts = [...new Set(ports)];
 

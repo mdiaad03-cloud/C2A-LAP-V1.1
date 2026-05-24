@@ -125,4 +125,49 @@ router.post(
   }),
 );
 
+// 4. POST /api/whatsapp/webhook (UltraMsg incoming message webhook)
+router.post(
+  "/webhook",
+  asyncHandler(async (req, res) => {
+    // UltraMsg sends webhook data in different formats
+    const data = req.body || {};
+    const eventType = data.event_type || data.type || "";
+    
+    // Only process incoming messages
+    if (eventType && eventType !== "message_received" && eventType !== "chat") {
+      return res.json({ success: true, skipped: true });
+    }
+
+    // Extract phone and message body from UltraMsg webhook payload
+    const phone = data.data?.from || data.from || data.phone || "";
+    const text = data.data?.body || data.body || data.text || data.message || "";
+
+    if (!phone || !text) {
+      return res.json({ success: true, skipped: true, reason: "no phone or text" });
+    }
+
+    // Clean the phone - remove @c.us suffix if present
+    const cleanedPhone = String(phone).replace(/@c\.us$/, "").replace(/@s\.whatsapp\.net$/, "");
+
+    console.log(`[UltraMsg Webhook] Received from ${cleanedPhone}: "${text}"`);
+
+    try {
+      const result = await receiveCustomerReply(cleanedPhone, text.trim());
+      console.log(`[UltraMsg Webhook] Processed reply for ${cleanedPhone}`);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      console.error(`[UltraMsg Webhook] Error processing reply:`, err.message);
+      res.json({ success: false, error: err.message });
+    }
+  }),
+);
+
+// 5. GET /api/whatsapp/webhook (UltraMsg verification endpoint)
+router.get(
+  "/webhook",
+  (req, res) => {
+    res.status(200).send("OK");
+  },
+);
+
 export default router;

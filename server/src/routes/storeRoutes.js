@@ -18,7 +18,7 @@ import {
 } from "../services/onlineOrderService.js";
 import { sendOrderPlacedEmail } from "../services/emailService.js";
 import { syncSalesWorkbook } from "../services/excelAutoSaveService.js";
-import { sendOrderConfirmationMessage } from "../services/whatsappService.js";
+import { sendOrderConfirmationMessage, sendOrderStatusMessage } from "../services/whatsappService.js";
 import { nowIso } from "../utils/dateUtils.js";
 import { verifyAuthToken } from "../utils/jwt.js";
 import { requireText } from "../utils/validation.js";
@@ -464,11 +464,31 @@ router.post(
     await saveDb();
     await syncSalesExcelSafe(db.sales);
 
-    // Send WhatsApp order confirmation prompt
-    try {
-      await sendOrderConfirmationMessage(order);
-    } catch (whatsappError) {
-      console.error(`WhatsApp confirmation message failed for ${order.orderNumber}:`, whatsappError);
+    // Paymob orders: auto-confirm since payment is already processed
+    const isOnlinePayment = payload.paymentMethod === "paymob" || payload.paymentMethod === "paymob_egypt";
+    if (isOnlinePayment) {
+      order.status = ORDER_STATUSES.confirmed || "confirmed";
+      order.statusHistory = order.statusHistory || [];
+      order.statusHistory.unshift(
+        buildOrderStatusHistory(ORDER_STATUSES.confirmed || "confirmed", { id: "system", name: "Auto-Confirm (Paymob)" })
+      );
+      order.confirmedAt = nowIso();
+      order.updatedAt = nowIso();
+      await saveDb();
+
+      // Send confirmed status WhatsApp message
+      try {
+        await sendOrderStatusMessage(order, ORDER_STATUSES.pending);
+      } catch (whatsappError) {
+        console.error(`WhatsApp auto-confirm message failed for ${order.orderNumber}:`, whatsappError);
+      }
+    } else {
+      // Cash on delivery: send confirmation prompt via WhatsApp (reply 1/2)
+      try {
+        await sendOrderConfirmationMessage(order);
+      } catch (whatsappError) {
+        console.error(`WhatsApp confirmation message failed for ${order.orderNumber}:`, whatsappError);
+      }
     }
 
     try {
