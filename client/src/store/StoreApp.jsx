@@ -2485,6 +2485,7 @@ function StoreCartPage() {
     discountCode,
     setDiscountCode,
     setAppliedCoupon,
+    customerSession,
   } = useStore();
 
   const [promoInput, setPromoInput] = useState(discountCode);
@@ -2606,8 +2607,15 @@ function StoreCartPage() {
                 return;
               }
               try {
+                const headers = {};
+                if (customerSession?.token) {
+                  headers["Authorization"] = `Bearer ${customerSession.token}`;
+                }
+                if (customerSession?.csrfToken) {
+                  headers["X-CSRF-Token"] = customerSession.csrfToken;
+                }
                 const response = await storeApi.post(`/verify-code`, { code }, {
-                  headers: customerHeaders(),
+                  headers,
                 });
                 if (response.data?.coupon) {
                   setAppliedCoupon(response.data.coupon);
