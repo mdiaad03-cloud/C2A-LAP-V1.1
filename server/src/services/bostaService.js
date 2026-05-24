@@ -490,10 +490,18 @@ export async function createBostaShipmentFromOrder(order, options = {}) {
   }
 
   const receiver = splitCustomerName(order.customerName);
-  const cityCode =
-    String(options.cityCode || "").trim()
-    || String(env.bostaDefaultCityCode || "").trim()
-    || (await resolveBostaCityCode(order.customerCity));
+  let cityCode = String(options.cityCode || "").trim();
+
+  if (!cityCode) {
+    cityCode = await resolveBostaCityCode(order.customerCity);
+  }
+
+  if (!cityCode && env.bostaDefaultCityCode) {
+    cityCode = await resolveBostaCityCode(env.bostaDefaultCityCode);
+    if (!cityCode) {
+      cityCode = String(env.bostaDefaultCityCode).trim();
+    }
+  }
 
   if (!cityCode) {
     throw createHttpError(
