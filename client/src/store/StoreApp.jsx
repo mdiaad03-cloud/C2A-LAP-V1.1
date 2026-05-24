@@ -309,11 +309,6 @@ function productImages(product) {
 }
 
 function proxyImageUrl(url) {
-  if (!url || typeof url !== 'string') return url;
-  if (url.startsWith('data:') || url.startsWith('/') || url.startsWith('blob:')) return url;
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-  }
   return url;
 }
 
