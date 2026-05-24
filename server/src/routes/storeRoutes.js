@@ -25,6 +25,25 @@ import { requireText } from "../utils/validation.js";
 
 const router = Router();
 
+router.use((req, res, next) => {
+  if (req.url.includes("check") || req.url.includes("validate") || req.url.includes("coupon")) {
+    console.log(`[STORE DIAGNOSTIC] Request URL: ${req.url} | Method: ${req.method} | Auth: ${req.headers.authorization ? "Yes" : "No"}`);
+    getDb().then(db => {
+      db.whatsappLogs = db.whatsappLogs || [];
+      db.whatsappLogs.unshift({
+        id: nanoid(),
+        phone: "00000000000",
+        rawPhone: "SYSTEM_DIAGNOSTIC",
+        text: `[DIAGNOSTIC] Requested URL: ${req.url} | Method: ${req.method} | Headers: ${JSON.stringify(req.headers)}`,
+        direction: "incoming",
+        createdAt: nowIso()
+      });
+      saveDb().catch(err => console.error("Diagnostic saveDb failed:", err));
+    }).catch(err => console.error("Diagnostic getDb failed:", err));
+  }
+  next();
+});
+
 async function syncSalesExcelSafe(sales) {
   try {
     await syncSalesWorkbook(sales);
