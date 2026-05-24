@@ -2618,7 +2618,8 @@ function StoreCartPage() {
                 }
               } catch (error) {
                 const backendError = error?.response?.data?.error || "";
-                let errMsg = tr("Invalid promo code.", "كود الخصم غير صالح.");
+                const rawDetail = error?.message || error?.code || "unknown";
+                let errMsg = tr(`Invalid promo code. (Detail: ${rawDetail})`, `كود الخصم غير صالح. (تفاصيل: ${rawDetail})`);
                 if (backendError.includes("first order")) {
                   errMsg = tr("This promo code is only valid for your first order.", "كود الخصم هذا صالح لطلبك الأول فقط.");
                 } else if (backendError.includes("log in first")) {
@@ -2630,7 +2631,7 @@ function StoreCartPage() {
                 } else if (backendError.includes("not found")) {
                   errMsg = tr("Promo code not found.", "كود الخصم غير موجود.");
                 } else if (backendError) {
-                  errMsg = backendError;
+                  errMsg = `${backendError} (${rawDetail})`;
                 }
                 toast.error(errMsg);
               }
