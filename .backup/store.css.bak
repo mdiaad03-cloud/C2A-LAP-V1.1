@@ -610,25 +610,25 @@
   border-radius: 16px;
   background: var(--panel);
   display: grid;
-  grid-template-rows: 180px 1fr;
+  grid-template-rows: 252px 1fr;
   overflow: hidden;
   height: 100%;
 }
 
 .store-product-image-link {
-  display: block;
-  height: 180px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--line);
-  overflow: hidden;
-  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  min-height: 252px;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--brand-2) 18%, transparent), transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, white 6%), color-mix(in srgb, var(--panel) 98%, transparent));
 }
 
 .store-product-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 12px;
+  object-fit: cover;
   display: block;
   transform: scale(var(--image-scale, 1));
   transition: transform 0.28s ease;
@@ -1024,7 +1024,10 @@
   border-radius: 18px;
   border: 1px solid var(--line);
   overflow: hidden;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--brand-2) 18%, transparent), transparent 34%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--brand) 18%, transparent), transparent 26%),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white 8%), var(--panel));
   display: grid;
   place-items: stretch;
   padding: 0;
@@ -1041,9 +1044,8 @@
   transform-origin: var(--zoom-x) var(--zoom-y);
   transition: transform 0.18s ease;
   will-change: transform;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  padding: 16px;
 }
 
 .store-detail-stage.is-zoomed .store-detail-main-image {
@@ -1270,20 +1272,13 @@
 }
 
 .account-section {
-  max-width: 1140px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .account-stack {
   display: grid;
   gap: 12px;
-}
-
-@media (min-width: 769px) {
-  .account-stack {
-    grid-template-columns: 1.8fr 1fr;
-    gap: 24px;
-  }
 }
 
 .account-form {
@@ -1665,17 +1660,9 @@
   .store-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 6px 12px;
-  }
-
-  .store-brand strong {
-    font-size: 0.9rem;
-  }
-
-  .store-brand span {
-    font-size: 0.65rem;
+    padding: 12px;
+    align-items: start;
+    gap: 10px 12px;
   }
 
   .store-nav {
@@ -1685,10 +1672,8 @@
     justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding: 2px 0;
-    margin-top: 2px;
+    padding-bottom: 4px;
     scrollbar-width: none;
-    border-top: 1px solid var(--line);
   }
 
   .store-nav::-webkit-scrollbar {
@@ -1698,47 +1683,12 @@
   .store-nav a {
     flex: 0 0 auto;
     white-space: nowrap;
-    font-size: 0.8rem;
-    padding: 4px 10px;
   }
 
   .store-header-actions {
     width: auto;
     justify-content: flex-end;
     grid-column: 2;
-    gap: 6px;
-  }
-
-  .store-select-mini {
-    padding: 4px 6px;
-    font-size: 0.75rem;
-    border-radius: 6px;
-  }
-
-  .store-icon-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-  }
-
-  .store-icon-btn svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .store-account-chip {
-    padding: 0;
-    border: none;
-    background: transparent;
-  }
-
-  .store-account-chip span {
-    display: none;
-  }
-
-  .store-account-chip .store-avatar {
-    width: 28px;
-    height: 28px;
   }
 
   .store-main {
@@ -1814,14 +1764,6 @@
     grid-template-columns: 1fr;
   }
 
-  .store-product-card {
-    grid-template-rows: 200px 1fr;
-  }
-
-  .store-product-image-link {
-    height: 200px;
-  }
-
   .store-section,
   .store-detail,
   .store-hero {
@@ -1851,6 +1793,7 @@
   }
 
   .store-slide-card img,
+  .store-product-image,
   .store-featured-mini-card img,
   .store-offer-card img {
     height: 220px;
@@ -1920,117 +1863,4 @@
     animation: none !important;
     transition: none !important;
   }
-}
-
-/* ============================================================
-   FIRST-ORDER DISCOUNT ANNOUNCEMENT BANNER
-   ============================================================ */
-.store-promo-banner {
-  background: linear-gradient(90deg, #ff7a18, #af002d);
-  color: #fff;
-  text-align: center;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  z-index: 25;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-.store-promo-banner-content {
-  display: inline-block;
-}
-
-.store-promo-banner .promo-code {
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px dashed #fff;
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin: 0 4px;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-}
-
-/* ============================================================
-   MULTIPLE ADDRESS CARDS GRID
-   ============================================================ */
-.address-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 14px;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-.address-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 120px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-}
-
-.address-card:hover {
-  border-color: var(--brand);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
-}
-
-.address-card.active {
-  border-color: var(--brand);
-  background: rgba(249, 115, 22, 0.04);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
-}
-
-.address-card-label {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--brand);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.address-card-details p {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--text);
-  line-height: 1.4;
-}
-
-.address-card-details p:last-child {
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-/* Delete Button on Address Card */
-.address-card-delete-btn {
-  background: transparent !important;
-  color: #ef4444 !important;
-  border: none !important;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.address-card-delete-btn:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-/* RTL & LTR positioning */
-[dir="rtl"] .address-card-delete-btn {
-  left: 10px;
-  right: auto;
-}
-[dir="ltr"] .address-card-delete-btn {
-  right: 10px;
-  left: auto;
 }

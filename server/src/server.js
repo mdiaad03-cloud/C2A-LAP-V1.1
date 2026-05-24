@@ -331,7 +331,7 @@ app.use((req, res, next) => {
     !req.path.startsWith("/uploads") &&
     !req.query.cb
   ) {
-    const cb = "1.2.7";
+    const cb = "1.2.9";
     const separator = req.originalUrl.includes("?") ? "&" : "?";
     return res.redirect(`${req.originalUrl}${separator}cb=${cb}`);
   }
