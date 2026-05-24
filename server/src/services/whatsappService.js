@@ -98,20 +98,38 @@ export async function sendWhatsAppMessage(phone, text, orderId = null) {
 }
 
 export async function sendOrderConfirmationMessage(order) {
-  const storeUrl = env.storeBaseUrl || "http://localhost:5500";
-  const confirmUrl = `${storeUrl}/confirm-order?id=${order.id}`;
+  const paymentLabel = order.paymentMethod === "cash_on_delivery" ? "الدفع عند الاستلام 💵" : "تم الدفع إلكترونياً 💳";
+  const itemsList = (order.items || [])
+    .map((item, i) => `  ${i + 1}. ${item.laptopName || item.name || "منتج"} × ${item.quantity}`)
+    .join("\n");
 
-  const messageText = `عزيزنا ${order.customerName}،
+  const messageText = `━━━━━━━━━━━━━━━━━
+🛒 *طلب جديد من C2A LAP*
+━━━━━━━━━━━━━━━━━
 
-شكراً لطلبك من C2A LAP! 🎉
-رقم طلبك هو: ${order.orderNumber}
-إجمالي الطلب: ${order.total} ج.م (الدفع: ${order.paymentMethod === "cash_on_delivery" ? "عند الاستلام" : "بطاقة/محفظة"})
+مرحباً *${order.customerName}* 👋
 
-لتأكيد طلبك وتجهيز الشحن فوراً، يرجى الضغط على الرابط التالي:
-🔗 ${confirmUrl}
+تم استلام طلبك بنجاح! ✅
 
-أو أجب على هذه الرسالة بـ "1" أو "تأكيد" لتأكيد الطلب.
-لإلغاء الطلب، أرسل "2" أو "إلغاء".`;
+📋 *تفاصيل الطلب:*
+▫️ رقم الطلب: *${order.orderNumber}*
+▫️ طريقة الدفع: ${paymentLabel}
+
+🛍️ *المنتجات:*
+${itemsList}
+
+💰 *الإجمالي: ${Number(order.total).toLocaleString("ar-EG")} ج.م*
+
+━━━━━━━━━━━━━━━━━
+📌 *لتأكيد الطلب:*
+    أرسل *1* أو اكتب *تأكيد*
+
+❌ *لإلغاء الطلب:*
+    أرسل *2* أو اكتب *إلغاء*
+━━━━━━━━━━━━━━━━━
+
+⏳ سيتم إلغاء الطلب تلقائياً في حال عدم التأكيد خلال 24 ساعة.
+شكراً لثقتك بنا! 💙`;
 
   return sendWhatsAppMessage(order.customerPhone, messageText, order.id);
 }
@@ -258,35 +276,66 @@ export async function sendOrderStatusMessage(order, previousStatus) {
   let messageText = "";
 
   if (status === "confirmed") {
-    messageText = `عزيزنا ${order.customerName}،
+    messageText = `━━━━━━━━━━━━━━━━━
+✅ *تأكيد الطلب - C2A LAP*
+━━━━━━━━━━━━━━━━━
 
-تم تأكيد طلبك رقم ${order.orderNumber} بنجاح! 🎉
-وجاري البدء في التجهيز والشحن إليك في أقرب وقت.
+مرحباً *${order.customerName}* 👋
 
-إجمالي الطلب: ${order.total} ج.م
-شكراً لثقتك بنا!`;
+تم تأكيد طلبك بنجاح! 🎉
+
+📋 رقم الطلب: *${order.orderNumber}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*
+
+📦 جاري تجهيز طلبك للشحن وسنعلمك فور إرساله.
+
+شكراً لثقتك بنا! 💙`;
+
   } else if (status === "shipped") {
-    const carrierText = order.shippingCompanyName ? `\nشركة الشحن: ${order.shippingCompanyName}` : "";
-    const trackingNumberText = order.trackingNumber ? `\nرقم التتبع: ${order.trackingNumber}` : "";
-    const trackingUrlText = order.trackingNumber ? `\n🔗 رابط التتبع: https://bosta.co/tracking-shipment/?track_num=${order.trackingNumber}` : "";
+    const carrierLine = order.shippingCompanyName ? `\n🏢 شركة الشحن: *${order.shippingCompanyName}*` : "";
+    const trackingLine = order.trackingNumber ? `\n🔢 رقم التتبع: *${order.trackingNumber}*` : "";
+    const trackingUrl = order.trackingNumber ? `\n🔗 تتبع شحنتك:\nhttps://bosta.co/tracking-shipment/?track_num=${order.trackingNumber}` : "";
 
-    messageText = `عزيزنا ${order.customerName}،
+    messageText = `━━━━━━━━━━━━━━━━━
+🚚 *تم شحن طلبك - C2A LAP*
+━━━━━━━━━━━━━━━━━
 
-تم شحن طلبك رقم ${order.orderNumber} وهو الآن في الطريق إليك! 🚚${carrierText}${trackingNumberText}${trackingUrlText}
+مرحباً *${order.customerName}* 👋
 
-نشكرك لتسوقك معنا!`;
+طلبك رقم *${order.orderNumber}* في الطريق إليك! 📦${carrierLine}${trackingLine}${trackingUrl}
+
+━━━━━━━━━━━━━━━━━
+نشكرك لتسوقك معنا! 💙`;
+
   } else if (status === "delivered") {
-    messageText = `عزيزنا ${order.customerName}،
+    messageText = `━━━━━━━━━━━━━━━━━
+📦 *تم التوصيل - C2A LAP*
+━━━━━━━━━━━━━━━━━
 
-تم توصيل وتسليم طلبك رقم ${order.orderNumber} بنجاح! 🎉
-نتمنى أن تنال منتجاتنا رضاكم.
+مرحباً *${order.customerName}* 👋
 
-شكراً لاختيارك C2A LAP! 💻`;
+تم توصيل طلبك رقم *${order.orderNumber}* بنجاح! 🎉
+
+نتمنى أن تنال منتجاتنا رضاكم ⭐
+لو عندك أي استفسار، تواصل معنا في أي وقت.
+
+━━━━━━━━━━━━━━━━━
+شكراً لاختيارك *C2A LAP*! 💻💙`;
+
   } else if (status === "cancelled") {
-    messageText = `عزيزنا ${order.customerName}،
+    messageText = `━━━━━━━━━━━━━━━━━
+❌ *إلغاء طلب - C2A LAP*
+━━━━━━━━━━━━━━━━━
 
-تم إلغاء طلبك رقم ${order.orderNumber}.
-إذا كان هذا الإلغاء غير مقصود أو ترغب في الاستفسار، يرجى التواصل مع الدعم الفني.`;
+مرحباً *${order.customerName}* 👋
+
+تم إلغاء طلبك رقم *${order.orderNumber}*.
+
+لو الإلغاء غير مقصود أو عندك أي استفسار، تواصل معنا وهنساعدك فوراً.
+
+━━━━━━━━━━━━━━━━━
+فريق *C2A LAP* 💙`;
+
   } else {
     return null;
   }
