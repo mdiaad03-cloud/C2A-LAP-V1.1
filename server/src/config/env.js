@@ -9,7 +9,7 @@ export const env = {
   adminPort: Number(process.env.PORT || process.env.ADMIN_PORT || 5000),
   storePort: Number(process.env.PORT || process.env.STORE_PORT || 5001),
   jwtSecret: process.env.JWT_SECRET || "dev-secret-change-me",
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "30d",
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
   allowAllCors:
     String(process.env.CORS_ALLOW_ALL || "").toLowerCase() === "true"

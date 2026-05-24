@@ -797,7 +797,9 @@ function StoreProvider({ children }) {
         resetCustomerSession();
         return null;
       }
-      throw error;
+      // Network errors or server issues — don't logout, just keep the stored session
+      console.warn("Profile refresh failed (non-auth):", error?.message || error);
+      return null;
     }
   }
 
