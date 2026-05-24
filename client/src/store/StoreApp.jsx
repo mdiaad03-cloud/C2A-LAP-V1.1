@@ -238,6 +238,7 @@ function parseStoredCart() {
       return [];
     }
     return parsed
+      .filter((item) => item && typeof item === "object")
       .map((item) => ({
         productId: String(item.productId || ""),
         quantity: Math.max(1, Number.parseInt(item.quantity || 1, 10) || 1),
