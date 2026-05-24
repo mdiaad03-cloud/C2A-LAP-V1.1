@@ -39,14 +39,36 @@ export const DEFAULT_TEMPLATES = {
 💰 *الإجمالي: {total} ج.م*
 
 ━━━━━━━━━━━━━━━━━
-📌 *لتأكيد الطلب:*
-    أرسل *1* أو اكتب *تأكيد*
-
-❌ *لإلغاء الطلب:*
-    أرسل *2* أو اكتب *إلغاء*
+📦 سنقوم بالتواصل معك قريباً لتأكيد طلبك وتجهيز الشحن.
 ━━━━━━━━━━━━━━━━━
 
-⏳ سيتم إلغاء الطلب تلقائياً في حال عدم التأكيد خلال 24 ساعة.
+شكراً لثقتك بنا! 💙`,
+
+  order_confirmation_instapay: `━━━━━━━━━━━━━━━━━
+⚡ *طلب جديد من C2A LAP (تحويل انستا باي)*
+━━━━━━━━━━━━━━━━━
+
+مرحباً *{customerName}* 👋
+
+تم استلام طلبك بنجاح! ✅
+
+📋 *تفاصيل الطلب:*
+▫️ رقم الطلب: *{orderNumber}*
+▫️ طريقة الدفع: تحويل انستا باي ⚡
+
+🛍️ *المنتجات:*
+{itemsList}
+
+💰 *الإجمالي: {total} ج.م*
+
+━━━━━━━━━━━━━━━━━
+📌 *خطوات إتمام الدفع وتأكيد الطلب:*
+1️⃣ يرجى تحويل المبلغ الإجمالي *{total} ج.م* إلى حساب انستا باي الخاص بنا:
+💰 عنوان الدفع (Address): *{instapayAddress}*
+
+2️⃣ بعد إتمام التحويل بنجاح، *يرجى إرسال صورة / لقطة شاشة (Screenshot) للتحويل في هذا الشات لتأكيد طلبك وتجهيز الشحن فوراً.* 📸
+━━━━━━━━━━━━━━━━━
+
 شكراً لثقتك بنا! 💙`,
 
   order_confirmed: `━━━━━━━━━━━━━━━━━
@@ -106,7 +128,7 @@ export const DEFAULT_TEMPLATES = {
 فريق *C2A LAP* 💙`
 };
 
-export function replaceTemplateVariables(template, order) {
+export function replaceTemplateVariables(template, order, instapayAddress = "") {
   let paymentLabel = "الدفع عند الاستلام 💵";
   if (order.paymentMethod === "paymob_egypt") {
     paymentLabel = "تم الدفع إلكترونياً 💳";
@@ -130,6 +152,7 @@ export function replaceTemplateVariables(template, order) {
     .replace(/{paymentLabel}/g, paymentLabel)
     .replace(/{itemsList}/g, itemsList)
     .replace(/{total}/g, totalStr)
+    .replace(/{instapayAddress}/g, instapayAddress || "")
     .replace(/{carrierLine}/g, carrierLine)
     .replace(/{trackingLine}/g, trackingLine)
     .replace(/{trackingUrlLine}/g, trackingUrlLine);
@@ -224,8 +247,13 @@ export async function sendWhatsAppMessage(phone, text, orderId = null) {
 
 export async function sendOrderConfirmationMessage(order) {
   const db = await getDb();
-  const template = db.whatsappTemplates?.order_confirmation || DEFAULT_TEMPLATES.order_confirmation;
-  const messageText = replaceTemplateVariables(template, order);
+  let templateKey = "order_confirmation";
+  if (order.paymentMethod === "instapay") {
+    templateKey = "order_confirmation_instapay";
+  }
+  const template = db.whatsappTemplates?.[templateKey] || DEFAULT_TEMPLATES[templateKey];
+  const instapayAddress = db.storeSettings?.features?.instapayAddress || "";
+  const messageText = replaceTemplateVariables(template, order, instapayAddress);
   return sendWhatsAppMessage(order.customerPhone, messageText, order.id);
 }
 
@@ -396,7 +424,8 @@ export async function sendOrderStatusMessage(order, previousStatus) {
   else return null;
 
   const template = db.whatsappTemplates?.[templateKey] || DEFAULT_TEMPLATES[templateKey];
-  const messageText = replaceTemplateVariables(template, order);
+  const instapayAddress = db.storeSettings?.features?.instapayAddress || "";
+  const messageText = replaceTemplateVariables(template, order, instapayAddress);
 
   // Send message to customer
   const result = await sendWhatsAppMessage(order.customerPhone, messageText, order.id);

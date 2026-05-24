@@ -166,6 +166,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
   const templateLabel = (key) => {
     return ({
       order_confirmation: tr("Order Confirmation (COD)", "تأكيد الطلب (الدفع عند الاستلام)"),
+      order_confirmation_instapay: tr("Order Confirmation (InstaPay)", "تأكيد الطلب (تحويل انستا باي)"),
       order_confirmed: tr("Order Confirmed", "تأكيد الطلب من الإدارة"),
       order_shipped: tr("Order Shipped", "شحن الطلب"),
       order_delivered: tr("Order Delivered", "تم توصيل الطلب"),
@@ -175,7 +176,8 @@ export default function WhatsappBotSection({ lang = "en" }) {
 
   const templateDescription = (key) => {
     return ({
-      order_confirmation: tr("Sent immediately when a COD order is placed to let the customer confirm (1) or cancel (2).", "تُرسل فوراً عند قيام العميل بعمل طلب دفع عند الاستلام ليقوم بتأكيد الطلب برقم (1) أو إلغائه برقم (2)."),
+      order_confirmation: tr("Sent immediately when a COD order is placed to let the customer know the order is received.", "تُرسل فوراً عند قيام العميل بعمل طلب دفع عند الاستلام لإخباره بأنه تم استلام الطلب وبانتظار التجهيز."),
+      order_confirmation_instapay: tr("Sent immediately when an InstaPay order is placed, displaying transfer instructions and requesting a screenshot.", "تُرسل فوراً عند قيام العميل بعمل طلب دفع انستا باي، وتتضمن تعليمات التحويل وطلب إرسال صورة التحويل لتأكيد الطلب."),
       order_confirmed: tr("Sent when the order is confirmed by the admin or automatically via Paymob payment.", "تُرسل عندما يتم تأكيد الطلب من قبل الإدارة، أو تلقائياً بعد نجاح الدفع عبر Paymob."),
       order_shipped: tr("Sent when the order is shipped to the customer, displaying carrier and tracking number.", "تُرسل عند شحن الطلب وتعبئة بيانات شركة الشحن ورقم التتبع."),
       order_delivered: tr("Sent when Bosta or webhook confirms the order has been delivered successfully.", "تُرسل عند تسليم الشحنة للعميل بنجاح وتحديث حالتها في النظام."),
@@ -189,6 +191,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
     { tag: "{paymentLabel}", label: tr("Payment Method Status", "طريقة وحالة الدفع") },
     { tag: "{itemsList}", label: tr("Items list of the order", "قائمة المنتجات والكميات") },
     { tag: "{total}", label: tr("Order Total Amount (EGP)", "المبلغ الإجمالي بالجنيه") },
+    { tag: "{instapayAddress}", label: tr("Store InstaPay Address", "عنوان انستا باي الخاص بالمتجر") },
     { tag: "{carrierLine}", label: tr("Carrier line (Optional)", "اسم شركة الشحن (اختياري)") },
     { tag: "{trackingLine}", label: tr("Tracking Number (Optional)", "رقم التتبع (اختياري)") },
     { tag: "{trackingUrlLine}", label: tr("Tracking URL (Optional)", "رابط تتبع الشحنة (اختياري)") },
@@ -427,7 +430,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
               </div>
             ) : (
               <div style={{ display: "grid", gap: "8px" }}>
-                {["order_confirmation", "order_confirmed", "order_shipped", "order_delivered", "order_cancelled"].map((key) => (
+                {["order_confirmation", "order_confirmation_instapay", "order_confirmed", "order_shipped", "order_delivered", "order_cancelled"].map((key) => (
                   <button
                     key={key}
                     onClick={() => setSelectedTemplateKey(key)}
