@@ -245,7 +245,11 @@ export function buildOrderPayload({ db, items, customer, paymentMethod, discount
   }
 
   const subtotal = toMoney(sanitizedItems.reduce((sum, item) => sum + item.lineTotal, 0));
-  let shippingCost = toMoney(computeShippingCost(subtotal, db.storeSettings));
+  const method = String(paymentMethod || "cash_on_delivery").trim().toLowerCase();
+  let shippingCost = 0;
+  if (method !== "paymob_egypt" && method !== "instapay") {
+    shippingCost = toMoney(computeShippingCost(subtotal, db.storeSettings));
+  }
 
   let discountAmount = 0;
   const normalizedCode = String(discountCode || "").trim().toUpperCase();
@@ -299,10 +303,10 @@ export function buildOrderPayload({ db, items, customer, paymentMethod, discount
   const customerCity = requireText(customer?.city, "City");
   const customerNotes = asOptionalText(customer?.notes);
 
-  const method = String(paymentMethod || "cash_on_delivery").trim().toLowerCase();
   const allowedPaymentMethods = [
     "cash_on_delivery",
     "paymob_egypt",
+    "instapay",
   ];
   if (!allowedPaymentMethods.includes(method)) {
     const error = new Error("Unsupported payment method.");

@@ -148,6 +148,21 @@ router.put(
     if (featuresPayload.reviewsEnabled !== undefined) {
       db.storeSettings.features.reviewsEnabled = Boolean(featuresPayload.reviewsEnabled);
     }
+    if (featuresPayload.paymobEnabled !== undefined) {
+      db.storeSettings.features.paymobEnabled = Boolean(featuresPayload.paymobEnabled);
+    }
+    if (featuresPayload.paymobComingSoon !== undefined) {
+      db.storeSettings.features.paymobComingSoon = Boolean(featuresPayload.paymobComingSoon);
+    }
+    if (featuresPayload.instapayEnabled !== undefined) {
+      db.storeSettings.features.instapayEnabled = Boolean(featuresPayload.instapayEnabled);
+    }
+    if (featuresPayload.instapayComingSoon !== undefined) {
+      db.storeSettings.features.instapayComingSoon = Boolean(featuresPayload.instapayComingSoon);
+    }
+    if (featuresPayload.cashOnDeliveryEnabled !== undefined) {
+      db.storeSettings.features.cashOnDeliveryEnabled = Boolean(featuresPayload.cashOnDeliveryEnabled);
+    }
 
     if (req.body.socialLinks !== undefined) {
       db.storeSettings.socialLinks = normalizeSocialLinks(req.body.socialLinks);
