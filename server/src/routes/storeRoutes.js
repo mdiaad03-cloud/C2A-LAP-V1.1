@@ -26,7 +26,7 @@ import { requireText } from "../utils/validation.js";
 const router = Router();
 
 router.use((req, res, next) => {
-  if (req.url.includes("check") || req.url.includes("validate") || req.url.includes("coupon")) {
+  if (req.url.includes("check") || req.url.includes("validate") || req.url.includes("coupon") || req.url.includes("verify")) {
     console.log(`[STORE DIAGNOSTIC] Request URL: ${req.url} | Method: ${req.method} | Auth: ${req.headers.authorization ? "Yes" : "No"}`);
     getDb().then(db => {
       db.whatsappLogs = db.whatsappLogs || [];
