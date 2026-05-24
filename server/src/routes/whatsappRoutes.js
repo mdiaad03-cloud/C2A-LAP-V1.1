@@ -41,10 +41,34 @@ router.get(
   authorize("admin"),
   asyncHandler(async (req, res) => {
     const { env } = await import("../config/env.js");
+    const { default: axios } = await import("axios");
+    
+    let ultramsgStatus = "unknown";
+    if (env.ultramsgInstanceId && env.ultramsgToken) {
+      try {
+        const response = await axios.get(
+          `https://api.ultramsg.com/${env.ultramsgInstanceId}/instance/settings`,
+          {
+            params: { token: env.ultramsgToken },
+            timeout: 10000,
+          }
+        );
+        ultramsgStatus = {
+          webhook_url: response.data?.webhook_url,
+          webhook_message_received: response.data?.webhook_message_received,
+          webhook_message_create: response.data?.webhook_message_create,
+          webhook_message_ack: response.data?.webhook_message_ack,
+        };
+      } catch (err) {
+        ultramsgStatus = { error: err.response?.data || err.message };
+      }
+    }
+    
     res.json({
       storeBaseUrl: env.storeBaseUrl,
       ultramsgInstanceId: env.ultramsgInstanceId,
       hasToken: Boolean(env.ultramsgToken),
+      ultramsgSettings: ultramsgStatus,
     });
   }),
 );
