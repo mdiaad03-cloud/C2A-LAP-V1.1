@@ -134,7 +134,7 @@ async function resolveCheckoutCustomer(req, db) {
 }
 
 router.get(
-  "/coupons/validate/:code",
+  "/discount/check/:code",
   asyncHandler(async (req, res) => {
     const db = await getDb();
     const code = String(req.params.code || "").trim().toUpperCase();
