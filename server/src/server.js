@@ -17,7 +17,14 @@ import { syncSalesWorkbook } from "./services/excelAutoSaveService.js";
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadsDir = path.resolve("uploads");
+// Use Railway persistent volume for uploads if available
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR || "";
+const uploadsDir = volumePath && fs.existsSync(volumePath)
+  ? path.join(volumePath, "uploads")
+  : path.resolve("uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 function isPrivateIpv4(hostname) {
   if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {

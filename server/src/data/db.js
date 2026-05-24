@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
@@ -6,7 +7,23 @@ import { JSONFilePreset } from "lowdb/node";
 import { initialShippingCompanies, initialUsers } from "./seed.js";
 import { nowIso } from "../utils/dateUtils.js";
 
-const dataPath = path.resolve("src/data/db.json");
+// Use Railway persistent volume if available, otherwise local path
+function resolveDataPath() {
+  // Railway Volume mount path (set via env or default /data)
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR || "";
+  if (volumePath && fsSync.existsSync(volumePath)) {
+    const dbDir = path.join(volumePath, "db");
+    if (!fsSync.existsSync(dbDir)) {
+      fsSync.mkdirSync(dbDir, { recursive: true });
+    }
+    console.log(`[DB] Using persistent volume: ${path.join(dbDir, "db.json")}`);
+    return path.join(dbDir, "db.json");
+  }
+  // Fallback: local development path
+  return path.resolve("src/data/db.json");
+}
+
+const dataPath = resolveDataPath();
 
 const defaultFaqItems = [
   {

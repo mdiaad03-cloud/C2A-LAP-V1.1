@@ -33,7 +33,11 @@ import { sendOrderStatusMessage } from "../services/whatsappService.js";
 
 const router = Router();
 
-const avatarUploadDir = path.resolve("uploads", "avatars");
+const _volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR || "";
+const _uploadsBase = _volumePath && fs.existsSync(_volumePath)
+  ? path.join(_volumePath, "uploads")
+  : path.resolve("uploads");
+const avatarUploadDir = path.join(_uploadsBase, "avatars");
 if (!fs.existsSync(avatarUploadDir)) {
   fs.mkdirSync(avatarUploadDir, { recursive: true });
 }
