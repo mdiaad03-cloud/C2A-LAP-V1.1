@@ -166,6 +166,9 @@ router.put(
     if (featuresPayload.instapayAddress !== undefined) {
       db.storeSettings.features.instapayAddress = asOptionalText(featuresPayload.instapayAddress);
     }
+    if (featuresPayload.instapayLink !== undefined) {
+      db.storeSettings.features.instapayLink = asOptionalText(featuresPayload.instapayLink);
+    }
 
     if (req.body.socialLinks !== undefined) {
       db.storeSettings.socialLinks = normalizeSocialLinks(req.body.socialLinks);
