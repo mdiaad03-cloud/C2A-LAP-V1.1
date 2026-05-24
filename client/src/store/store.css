@@ -985,6 +985,8 @@
 .store-checkout-form textarea,
 .store-checkout-form button,
 .store-review-form select,
+.store-review-form input,
+.support-reply-row input,
 .store-qty-row input,
 .store-qty-mini input {
   border: 1px solid var(--line);
@@ -992,6 +994,19 @@
   background: color-mix(in srgb, var(--panel) 95%, black 5%);
   color: var(--text);
   padding: 9px 10px;
+  box-sizing: border-box;
+}
+
+.store-filter-grid input,
+.store-filter-grid select,
+.store-checkout-form input,
+.store-checkout-form select,
+.store-checkout-form textarea,
+.store-review-form input,
+.store-review-form select,
+.support-reply-row input {
+  width: 100%;
+  max-width: 100%;
 }
 
 .store-filter-grid input::placeholder {
@@ -1411,7 +1426,7 @@
 }
 
 .account-order-card ul {
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 
 .account-order-head {
@@ -1461,8 +1476,8 @@
 }
 
 .support-messages div {
-  border-left: 3px solid rgba(249, 115, 22, 0.4);
-  padding-left: 8px;
+  border-inline-start: 3px solid rgba(249, 115, 22, 0.4);
+  padding-inline-start: 8px;
 }
 
 .support-messages strong {
@@ -1661,7 +1676,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .store-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
