@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import api from "../lib/api";
 import toast from "react-hot-toast";
 import { formatDateTime } from "../utils/format";
-import { MessageSquare, Settings, Save, Info, RefreshCw, HelpCircle } from "lucide-react";
+import { MessageSquare, Settings, Save, Info } from "lucide-react";
 
 export default function WhatsappBotSection({ lang = "en" }) {
   const isArabic = lang === "ar";
@@ -200,7 +200,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
       <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--line)", paddingBottom: "8px", flexShrink: 0 }}>
         <button
           type="button"
-          className={subTab === "simulator" ? "primary-btn" : "secondary-btn"}
+          className={subTab === "simulator" ? "btn btn-primary" : "btn btn-secondary"}
           onClick={() => setSubTab("simulator")}
           style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px" }}
         >
@@ -209,7 +209,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
         </button>
         <button
           type="button"
-          className={subTab === "templates" ? "primary-btn" : "secondary-btn"}
+          className={subTab === "templates" ? "btn btn-primary" : "btn btn-secondary"}
           onClick={() => setSubTab("templates")}
           style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px" }}
         >
@@ -464,7 +464,7 @@ export default function WhatsappBotSection({ lang = "en" }) {
               </div>
               <button
                 type="button"
-                className="primary-btn"
+                className="btn btn-primary"
                 onClick={handleSaveTemplates}
                 disabled={savingTemplates || loadingTemplates}
                 style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}

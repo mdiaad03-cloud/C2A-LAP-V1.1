@@ -73,7 +73,6 @@ router.get(
   }),
 );
 
-
 // 2. POST /api/whatsapp/simulate-reply (Simulate customer replying to the WhatsApp bot)
 router.post(
   "/simulate-reply",
@@ -147,6 +146,19 @@ router.post(
     const followUpText = `تمت عملية تأكيد طلبك رقم ${order.orderNumber} بنجاح عبر الرابط! 🎉 سنقوم بشحنه إليك قريباً. شكراً لك!`;
     await sendWhatsAppMessage(order.customerPhone, followUpText, order.id);
 
+    // Notify Admin Alert
+    try {
+      const { sendWhatsAppAdminAlert } = await import("../services/whatsappService.js");
+      const adminAlertText = `✅ *تم تأكيد الطلب من العميل عبر رابط الويب*
+📋 طلب رقم: *${order.orderNumber}*
+👤 العميل: *${order.customerName}*
+📞 هاتف: *${order.customerPhone}*
+💰 الإجمالي: *${Number(order.total).toLocaleString("ar-EG")} ج.م*`;
+      await sendWhatsAppAdminAlert(adminAlertText);
+    } catch (adminAlertErr) {
+      console.error("WhatsApp Link Confirmation Admin Alert failed:", adminAlertErr);
+    }
+
     await saveDb();
     if (salesChanged) {
       await syncSalesExcelSafe(db.sales);
@@ -169,7 +181,6 @@ router.post(
 router.post(
   "/webhook",
   asyncHandler(async (req, res) => {
-    // UltraMsg sends webhook data in different formats
     const data = req.body || {};
     const eventType = data.event_type || data.type || "";
     
@@ -186,7 +197,7 @@ router.post(
       return res.json({ success: true, skipped: true, reason: "no phone or text" });
     }
 
-    // Clean the phone - remove @c.us suffix if present
+    // Clean the phone
     const cleanedPhone = String(phone).replace(/@c\.us$/, "").replace(/@s\.whatsapp\.net$/, "");
 
     console.log(`[UltraMsg Webhook] Received from ${cleanedPhone}: "${text}"`);

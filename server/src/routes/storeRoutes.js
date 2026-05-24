@@ -495,7 +495,7 @@ router.post(
     await saveDb();
     await syncSalesExcelSafe(db.sales);
 
-    // Notify admin about new order
+    // Notify admin about new order via WhatsApp alert
     try {
       const { sendWhatsAppAdminAlert } = await import("../services/whatsappService.js");
       const adminAlertText = `🔔 *طلب جديد رقم ${order.orderNumber}*
@@ -530,7 +530,7 @@ ${order.items.map((item) => `  - ${item.laptopName} × ${item.quantity}`).join("
         console.error(`WhatsApp auto-confirm message failed for ${order.orderNumber}:`, whatsappError);
       }
     } else {
-      // Cash on delivery: send confirmation prompt via WhatsApp (reply 1/2)
+      // Cash on delivery: send confirmation prompt via WhatsApp
       try {
         await sendOrderConfirmationMessage(order);
       } catch (whatsappError) {

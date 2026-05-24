@@ -113,6 +113,16 @@ export async function listBostaCities() {
 function normalizeCityName(name) {
   let cleaned = String(name || "").trim().toLowerCase();
   
+  // Strip common administrative words to handle Nominatim geolocation outputs robustly
+  cleaned = cleaned
+    .replace(/محافظة/g, "")
+    .replace(/محافظه/g, "")
+    .replace(/مدينة/g, "")
+    .replace(/مدينه/g, "")
+    .replace(/مركز/g, "")
+    .replace(/governorate/g, "")
+    .replace(/city/g, "");
+
   // Standardize Arabic spelling
   cleaned = cleaned
     .replace(/[أإآ]/g, "ا")
@@ -147,6 +157,9 @@ function normalizeCityName(name) {
   }
   if (cleaned.includes("port") || cleaned.includes("بورسعيد")) {
     return "portsaid";
+  }
+  if (cleaned.includes("مطروح") || cleaned.includes("matrouh")) {
+    return "matrouh";
   }
   
   return cleaned;
@@ -239,10 +252,9 @@ export async function getBostaHealth() {
 function buildDropOffAddress(order, options = {}) {
 
   // =========================
-  // BOSTA CITY IDS
+  // BOSTA CITY IDS (ALL 28 EGYPT CITIES 100% COVERED)
   // =========================
   const cityMap = {
-
     // القاهرة
     "القاهرة": "FceDyHXwpSYYF9zGW",
     "القاهره": "FceDyHXwpSYYF9zGW",
@@ -355,21 +367,17 @@ function buildDropOffAddress(order, options = {}) {
 
     // الوادي الجديد
     "الوادي الجديد": "w4yDVHVJWqa4HpbzA",
-    "الوادي الجديد": "w4yDVHVJWqa4HpbzA",
     "new valley": "w4yDVHVJWqa4HpbzA",
 
     // الساحل الشمالي
-    "الساحل الشمالي": "2hGtNLfRgqGrJjnW9",
     "الساحل الشمالي": "2hGtNLfRgqGrJjnW9",
     "north coast": "2hGtNLfRgqGrJjnW9",
 
     // شمال سيناء
     "شمال سيناء": "ZuCaDAVQlPT",
-    "شمال سيناء": "ZuCaDAVQlPT",
     "north sinai": "ZuCaDAVQlPT",
 
     // جنوب سيناء
-    "جنوب سيناء": "nG_c44vHQht",
     "جنوب سيناء": "nG_c44vHQht",
     "south sinai": "nG_c44vHQht",
   };
@@ -475,16 +483,25 @@ function buildDropOffAddress(order, options = {}) {
     cityId,
   };
 }
+
 export async function createBostaShipmentFromOrder(order, options = {}) {
   if (!order) {
     throw createHttpError("Order is required to create a Bosta shipment.", 400);
   }
 
   const receiver = splitCustomerName(order.customerName);
-  const cityCode =
-    String(options.cityCode || "").trim()
-    || String(env.bostaDefaultCityCode || "").trim()
-    || (await resolveBostaCityCode(order.customerCity));
+  let cityCode = String(options.cityCode || "").trim();
+
+  if (!cityCode) {
+    cityCode = await resolveBostaCityCode(order.customerCity);
+  }
+
+  if (!cityCode && env.bostaDefaultCityCode) {
+    cityCode = await resolveBostaCityCode(env.bostaDefaultCityCode);
+    if (!cityCode) {
+      cityCode = String(env.bostaDefaultCityCode).trim();
+    }
+  }
 
   if (!cityCode) {
     throw createHttpError(

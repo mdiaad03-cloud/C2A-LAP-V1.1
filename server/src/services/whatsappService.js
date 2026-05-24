@@ -450,4 +450,3 @@ export async function autoConfigureUltraMsgWebhook() {
     console.error("[UltraMsg Webhook] ❌ Failed to auto-configure webhook:", error?.response?.data || error.message);
   }
 }
-
