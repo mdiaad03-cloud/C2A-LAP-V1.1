@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Filter, PackageSearch, RefreshCw } from "lucide-react";
 import { formatDateTime, money, number } from "../utils/format";
+import api from "../lib/api";
+
 
 const statusOptions = [
   { key: "" },
@@ -392,6 +394,135 @@ export default function OnlineOrdersSection({
                                     }
                                   />
                                 </label>
+                              </div>
+
+                              {/* Screenshots Section */}
+                              <div style={{
+                                borderTop: "1px dashed var(--line)",
+                                paddingTop: "1.2rem",
+                                marginTop: "0.5rem"
+                              }}>
+                                <h5 style={{ margin: "0 0 0.8rem 0", color: "var(--primary, #ff7a18)", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "1.1rem" }}>📷</span>
+                                  {tr("Payment & Confirmation Screenshots", "لقطات شاشة الدفع والتأكيد")}
+                                </h5>
+                                
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "1rem" }}>
+                                  {(order.screenshotUrls || []).length === 0 ? (
+                                    <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem", fontStyle: "italic" }}>
+                                      {tr("No screenshots uploaded yet.", "لم يتم رفع أي لقطات شاشة بعد.")}
+                                    </p>
+                                  ) : (
+                                    (order.screenshotUrls || []).map((url, idx) => (
+                                      <div key={idx} style={{
+                                        position: "relative",
+                                        width: "100px",
+                                        height: "100px",
+                                        borderRadius: "12px",
+                                        border: "1px solid var(--line)",
+                                        overflow: "hidden",
+                                        background: "var(--surface)",
+                                        boxShadow: "var(--shadow)",
+                                        transition: "transform 0.2s"
+                                      }}
+                                      onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                                      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                                      >
+                                        <img src={url} alt={`Screenshot ${idx + 1}`} style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover",
+                                          cursor: "pointer"
+                                        }} onClick={() => window.open(url, "_blank")} />
+                                        <button
+                                          type="button"
+                                          style={{
+                                            position: "absolute",
+                                            top: "6px",
+                                            right: "6px",
+                                            background: "rgba(214, 64, 69, 0.95)",
+                                            color: "#fff",
+                                            border: "0",
+                                            borderRadius: "50%",
+                                            width: "22px",
+                                            height: "22px",
+                                            display: "grid",
+                                            placeItems: "center",
+                                            cursor: "pointer",
+                                            fontSize: "0.8rem",
+                                            lineHeight: 1,
+                                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                                          }}
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm(tr("Are you sure you want to delete this screenshot?", "هل أنت متأكد من حذف لقطة الشاشة هذه؟"))) {
+                                              const updatedUrls = (order.screenshotUrls || []).filter((_, i) => i !== idx);
+                                              const toastId = toast.loading(tr("Deleting screenshot...", "جاري حذف لقطة الشاشة..."));
+                                              try {
+                                                await onUpdateOrder(order.id, { screenshotUrls: updatedUrls });
+                                                toast.success(tr("Screenshot deleted successfully.", "تم حذف لقطة الشاشة بنجاح."), { id: toastId });
+                                              } catch (err) {
+                                                toast.error(tr("Failed to delete screenshot.", "فشل في حذف لقطة الشاشة."), { id: toastId });
+                                              }
+                                            }
+                                          }}
+                                          title={tr("Delete", "حذف")}
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                                  <label className="secondary-btn" style={{ cursor: "pointer", position: "relative", padding: "8px 12px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                    <span>📁 {tr("Upload Screenshots (Max 3 files)", "رفع لقطات الشاشة (بحد أقصى 3 ملفات)")}</span>
+                                    <input
+                                      type="file"
+                                      multiple
+                                      accept="image/*"
+                                      style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        opacity: 0,
+                                        width: "100%",
+                                        height: "100%",
+                                        cursor: "pointer"
+                                      }}
+                                      onChange={async (event) => {
+                                        const files = event.target.files;
+                                        if (!files || files.length === 0) return;
+                                        
+                                        if (files.length > 3) {
+                                          toast.error(tr("You can upload a maximum of 3 images at once.", "يمكنك رفع 3 صور بحد أقصى في المرة الواحدة."));
+                                          return;
+                                        }
+
+                                        const formData = new FormData();
+                                        for (let i = 0; i < files.length; i++) {
+                                          formData.append("screenshots", files[i]);
+                                        }
+
+                                        const toastId = toast.loading(tr("Uploading screenshots...", "جاري رفع لقطات الشاشة..."));
+                                        try {
+                                          await api.post(`/online-orders/${order.id}/screenshot`, formData, {
+                                            headers: { "Content-Type": "multipart/form-data" }
+                                          });
+                                          // Force immediate UI refresh
+                                          await onUpdateOrder(order.id, {});
+                                          toast.success(tr("Screenshots uploaded successfully.", "تم رفع لقطات الشاشة بنجاح."), { id: toastId });
+                                        } catch (err) {
+                                          toast.error(err?.response?.data?.error || tr("Failed to upload screenshots.", "فشل في رفع لقطات الشاشة."), { id: toastId });
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                  <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
+                                    {tr("Supports PNG, JPG, JPEG up to 5MB", "يدعم صيغ PNG, JPG, JPEG حتى 5 ميجابايت")}
+                                  </span>
+                                </div>
                               </div>
 
                               {/* Form actions */}
