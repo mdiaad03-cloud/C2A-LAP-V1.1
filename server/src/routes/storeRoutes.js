@@ -152,53 +152,53 @@ async function resolveCheckoutCustomer(req, db) {
   }
 }
 
-router.get(
-  "/discount/check/:code",
-  asyncHandler(async (req, res) => {
-    const db = await getDb();
-    const code = String(req.params.code || "").trim().toUpperCase();
-    if (!code) {
-      return res.status(400).json({ error: "Coupon code is required." });
-    }
+const validateCouponHandler = asyncHandler(async (req, res) => {
+  const db = await getDb();
+  const code = String(req.params.code || "").trim().toUpperCase();
+  if (!code) {
+    return res.status(400).json({ error: "Coupon code is required." });
+  }
 
-    const coupon = db.coupons?.find((c) => c.code.toUpperCase() === code);
-    if (!coupon) {
-      return res.status(404).json({ error: "Coupon not found." });
-    }
+  const coupon = db.coupons?.find((c) => c.code.toUpperCase() === code);
+  if (!coupon) {
+    return res.status(404).json({ error: "Coupon not found." });
+  }
 
-    if (!coupon.isActive) {
-      return res.status(400).json({ error: "This coupon is inactive." });
-    }
+  if (!coupon.isActive) {
+    return res.status(400).json({ error: "This coupon is inactive." });
+  }
 
-    if (coupon.usageLimit > 0 && (coupon.usageCount || 0) >= coupon.usageLimit) {
-      return res.status(400).json({ error: "This coupon usage limit has been reached." });
-    }
+  if (coupon.usageLimit > 0 && (coupon.usageCount || 0) >= coupon.usageLimit) {
+    return res.status(400).json({ error: "This coupon usage limit has been reached." });
+  }
 
-    if (coupon.isFirstOrderOnly) {
-      const customerAccount = await resolveCheckoutCustomer(req, db);
-      if (!customerAccount) {
-        return res.status(401).json({ error: "Please log in first to apply this first-order promo code." });
-      }
-      const userOrders = db.onlineOrders.filter(
-        (order) =>
-          (order.customerId === customerAccount.id ||
-           (customerAccount.email && String(order.customerEmail || "").toLowerCase() === String(customerAccount.email).toLowerCase())) &&
-          order.status !== "cancelled"
-      );
-      if (userOrders.length > 0) {
-        return res.status(400).json({ error: "This promo code is only valid for your first order." });
-      }
+  if (coupon.isFirstOrderOnly) {
+    const customerAccount = await resolveCheckoutCustomer(req, db);
+    if (!customerAccount) {
+      return res.status(401).json({ error: "Please log in first to apply this first-order promo code." });
     }
+    const userOrders = db.onlineOrders.filter(
+      (order) =>
+        (order.customerId === customerAccount.id ||
+         (customerAccount.email && String(order.customerEmail || "").toLowerCase() === String(customerAccount.email).toLowerCase())) &&
+        order.status !== "cancelled"
+    );
+    if (userOrders.length > 0) {
+      return res.status(400).json({ error: "This promo code is only valid for your first order." });
+    }
+  }
 
-    res.json({
-      coupon: {
-        code: coupon.code,
-        type: coupon.type,
-        value: coupon.value,
-      },
-    });
-  })
-);
+  res.json({
+    coupon: {
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value,
+    },
+  });
+});
+
+router.get("/discount/check/:code", validateCouponHandler);
+router.get("/coupons/validate/:code", validateCouponHandler);
 
 router.get(
   "/geocode",
