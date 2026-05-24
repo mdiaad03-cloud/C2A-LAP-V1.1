@@ -201,6 +201,16 @@ router.get("/discount/check/:code", validateCouponHandler);
 router.get("/coupons/validate/:code", validateCouponHandler);
 
 router.get(
+  "/diagnostics/view",
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    res.json({
+      latestLogs: (db.whatsappLogs || []).filter(l => l.rawPhone === "SYSTEM_DIAGNOSTIC").slice(0, 50)
+    });
+  })
+);
+
+router.get(
   "/geocode",
   asyncHandler(async (req, res) => {
     const { lat, lon } = req.query;
