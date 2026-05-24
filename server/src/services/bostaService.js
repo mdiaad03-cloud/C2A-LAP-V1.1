@@ -352,6 +352,26 @@ function buildDropOffAddress(order, options = {}) {
     // السويس
     "السويس": "PickurJ5uJZ9rDTHW",
     "suez": "PickurJ5uJZ9rDTHW",
+
+    // الوادي الجديد
+    "الوادي الجديد": "w4yDVHVJWqa4HpbzA",
+    "الوادي الجديد": "w4yDVHVJWqa4HpbzA",
+    "new valley": "w4yDVHVJWqa4HpbzA",
+
+    // الساحل الشمالي
+    "الساحل الشمالي": "2hGtNLfRgqGrJjnW9",
+    "الساحل الشمالي": "2hGtNLfRgqGrJjnW9",
+    "north coast": "2hGtNLfRgqGrJjnW9",
+
+    // شمال سيناء
+    "شمال سيناء": "ZuCaDAVQlPT",
+    "شمال سيناء": "ZuCaDAVQlPT",
+    "north sinai": "ZuCaDAVQlPT",
+
+    // جنوب سيناء
+    "جنوب سيناء": "nG_c44vHQht",
+    "جنوب سيناء": "nG_c44vHQht",
+    "south sinai": "nG_c44vHQht",
   };
 
   // =========================
