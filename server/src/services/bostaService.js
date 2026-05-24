@@ -166,7 +166,7 @@ export async function resolveBostaCityCode(cityName) {
     return candidates.includes(normalizedInput);
   });
 
-  return String(match?.code || match?._id || match?.id || "").trim();
+  return String(match?._id || match?.id || match?.code || "").trim();
 }
 
 export async function resolveBostaDistrict(cityId, cityName, fullAddress) {
