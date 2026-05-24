@@ -2770,10 +2770,10 @@ function StoreCheckoutPage() {
           const data = response.data;
           if (data && data.address) {
             const addrInfo = data.address;
-            const road = addrInfo.road || addrInfo.suburb || addrInfo.neighbourhood || addrInfo.village || "";
-            const city = addrInfo.city || addrInfo.town || addrInfo.village || addrInfo.governorate || addrInfo.state || "";
+            const road = addrInfo.road || addrInfo.suburb || addrInfo.neighbourhood || "";
+            const city = addrInfo.governorate || addrInfo.state || addrInfo.city || addrInfo.town || addrInfo.village || "";
             
-            let detailAddress = [road, addrInfo.suburb, addrInfo.neighbourhood].filter(Boolean).join(", ");
+            let detailAddress = [road, addrInfo.village, addrInfo.town, addrInfo.suburb, addrInfo.neighbourhood].filter(Boolean).join(", ");
             if (!detailAddress && data.display_name) {
               detailAddress = data.display_name;
             }
