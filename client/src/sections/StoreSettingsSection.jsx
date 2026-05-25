@@ -31,6 +31,7 @@ const blank = {
   shippingFlatRate: "25",
   freeShippingThreshold: "2000",
   lowStockThreshold: "3",
+  maxCouponsPerOrder: "1",
   categoriesText: "",
   heroBadge: "",
   heroBadgeAr: "",
@@ -172,6 +173,7 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
       shippingFlatRate: String(settings?.shippingFlatRate ?? 25),
       freeShippingThreshold: String(settings?.freeShippingThreshold ?? 2000),
       lowStockThreshold: String(settings?.lowStockThreshold ?? 3),
+      maxCouponsPerOrder: String(settings?.maxCouponsPerOrder ?? 1),
       categoriesText: Array.isArray(settings?.categories) ? settings.categories.join(", ") : "",
       heroBadge: settings?.content?.heroBadge || "",
       heroBadgeAr: settings?.content?.heroBadgeAr || "",
@@ -313,6 +315,7 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
         shippingFlatRate: Number(form.shippingFlatRate || 0),
         freeShippingThreshold: Number(form.freeShippingThreshold || 0),
         lowStockThreshold: Number(form.lowStockThreshold || 3),
+        maxCouponsPerOrder: Number(form.maxCouponsPerOrder || 1),
         categories: form.categoriesText,
         content: {
           heroBadge: form.heroBadge,
@@ -409,6 +412,10 @@ export default function StoreSettingsSection({ settings, onSave, onSendTestEmail
         <label>
           {tr("Low Stock Threshold", "حد انخفاض المخزون")}
           <input type="number" min="1" value={form.lowStockThreshold} onChange={(event) => update("lowStockThreshold", event.target.value)} />
+        </label>
+        <label>
+          {tr("Max Coupons Per Order", "أقصى عدد كوبونات لكل طلب")}
+          <input type="number" min="1" max="5" value={form.maxCouponsPerOrder} onChange={(event) => update("maxCouponsPerOrder", event.target.value)} />
         </label>
         <label className="span-2">
           {tr("Categories (comma separated)", "الفئات مفصولة بفواصل")}

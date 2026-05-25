@@ -252,6 +252,7 @@ async function ensureRequiredCollections() {
   db.storeSettings.shippingFlatRate = Number(db.storeSettings.shippingFlatRate ?? 25) || 25;
   db.storeSettings.freeShippingThreshold = Number(db.storeSettings.freeShippingThreshold ?? 2000) || 2000;
   db.storeSettings.lowStockThreshold = Number(db.storeSettings.lowStockThreshold ?? 3) || 3;
+  db.storeSettings.maxCouponsPerOrder = Number(db.storeSettings.maxCouponsPerOrder ?? 1) || 1;
   db.storeSettings.categories = Array.isArray(db.storeSettings.categories)
     ? db.storeSettings.categories.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 30)
     : ["Gaming", "Business", "Student", "Ultrabook"];

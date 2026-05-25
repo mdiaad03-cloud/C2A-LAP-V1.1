@@ -8,10 +8,12 @@ const emptyCoupon = {
   type: "percent", // percent, fixed, free_shipping
   value: "",
   usageLimit: "",
+  productId: "",
 };
 
 export default function CouponsSection({
   coupons = [],
+  products = [],
   onCreateCoupon,
   onUpdateCoupon,
   onDeleteCoupon,
@@ -39,6 +41,7 @@ export default function CouponsSection({
         type: form.type,
         value: form.type === "free_shipping" ? 0 : Number(form.value) || 0,
         usageLimit: Number(form.usageLimit) || 0,
+        productId: form.productId || "",
       });
       toast.success(tr("Coupon created successfully.", "تم إنشاء الكوبون بنجاح."));
       setForm(emptyCoupon);
@@ -120,6 +123,17 @@ export default function CouponsSection({
               required
             />
           </label>
+          <label>
+            {tr("Product Restriction", "تقييد بمنتج معين")}
+            <select value={form.productId} onChange={(event) => update("productId", event.target.value)}>
+              <option value="">{tr("All Products (Global)", "جميع المنتجات (عام)")}</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.brand} - {p.laptopName || p.sku}
+                </option>
+              ))}
+            </select>
+          </label>
           <button type="submit" className="primary-btn span-2" disabled={saving}>
             <Plus size={16} />
             {saving ? tr("Creating...", "جارٍ الإنشاء...") : tr("Create Coupon", "إنشاء كوبون")}
@@ -135,13 +149,14 @@ export default function CouponsSection({
           </div>
         </div>
 
-        <div className="table-wrap">
+         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>{tr("Code", "الكود")}</th>
                 <th>{tr("Type", "النوع")}</th>
                 <th>{tr("Value", "القيمة")}</th>
+                <th>{tr("Applies To", "ينطبق على")}</th>
                 <th>{tr("Usage Limit", "الحد الأقصى")}</th>
                 <th>{tr("Usage Count", "المستخدمون حالياً")}</th>
                 <th>{tr("Status", "الحالة")}</th>
@@ -151,7 +166,7 @@ export default function CouponsSection({
             <tbody>
               {coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", color: "var(--muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", color: "var(--muted)" }}>
                     {tr("No coupons found.", "لا توجد كوبونات.")}
                   </td>
                 </tr>
@@ -163,6 +178,16 @@ export default function CouponsSection({
                       {coupon.type === "percent" ? tr("Percentage", "نسبة مئوية") : coupon.type === "fixed" ? tr("Fixed Amount", "مبلغ ثابت") : tr("Free Shipping", "شحن مجاني")}
                     </td>
                     <td>{coupon.type === "free_shipping" ? "-" : coupon.type === "percent" ? `${coupon.value}%` : `${coupon.value} EGP`}</td>
+                    <td>
+                      {coupon.productId ? (
+                        (() => {
+                          const p = products.find((prod) => prod.id === coupon.productId);
+                          return p ? `${p.brand} ${p.laptopName || p.sku}` : tr("Restricted Laptop", "لاب توب محدد");
+                        })()
+                      ) : (
+                        <span style={{ color: "var(--muted)" }}>{tr("All Products", "جميع المنتجات")}</span>
+                      )}
+                    </td>
                     <td>{coupon.usageLimit === 0 ? tr("Unlimited", "غير محدود") : coupon.usageLimit}</td>
                     <td><strong>{coupon.usageCount || 0}</strong></td>
                     <td>

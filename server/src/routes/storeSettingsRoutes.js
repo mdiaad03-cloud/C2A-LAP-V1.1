@@ -104,6 +104,9 @@ router.put(
     if (req.body.lowStockThreshold !== undefined) {
       db.storeSettings.lowStockThreshold = Math.max(1, Number.parseInt(req.body.lowStockThreshold, 10) || 3);
     }
+    if (req.body.maxCouponsPerOrder !== undefined) {
+      db.storeSettings.maxCouponsPerOrder = Math.max(1, Number.parseInt(req.body.maxCouponsPerOrder, 10) || 1);
+    }
     if (req.body.categories !== undefined) {
       db.storeSettings.categories = normalizeCategories(req.body.categories);
     }

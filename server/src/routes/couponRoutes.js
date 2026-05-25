@@ -39,6 +39,14 @@ router.post(
     }
 
     const usageLimit = Math.max(0, Number(req.body.usageLimit) || 0);
+    const productId = req.body.productId ? String(req.body.productId).trim() : "";
+
+    if (productId) {
+      const productExists = db.products?.some((p) => p.id === productId);
+      if (!productExists) {
+        return res.status(400).json({ error: "Selected product does not exist in the catalog." });
+      }
+    }
 
     db.coupons ||= [];
     const exists = db.coupons.find((c) => c.code.toUpperCase() === code);
@@ -52,6 +60,7 @@ router.post(
       type,
       value,
       usageLimit,
+      productId,
       usageCount: 0,
       isActive: true,
       createdAt: nowIso(),
@@ -111,6 +120,17 @@ router.put(
 
     if (req.body.usageLimit !== undefined) {
       coupon.usageLimit = Math.max(0, Number(req.body.usageLimit) || 0);
+    }
+
+    if (req.body.productId !== undefined) {
+      const productId = String(req.body.productId || "").trim();
+      if (productId) {
+        const productExists = db.products?.some((p) => p.id === productId);
+        if (!productExists) {
+          return res.status(400).json({ error: "Selected product does not exist in the catalog." });
+        }
+      }
+      coupon.productId = productId;
     }
 
     if (req.body.isActive !== undefined) {

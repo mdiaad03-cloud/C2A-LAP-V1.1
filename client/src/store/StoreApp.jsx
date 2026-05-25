@@ -581,8 +581,11 @@ function StoreProvider({ children }) {
   const [supportStats, setSupportStats] = useState(null);
   const [customerOrders, setCustomerOrders] = useState([]);
   const [customerOrderStats, setCustomerOrderStats] = useState(null);
-  const [discountCode, setDiscountCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [appliedCoupons, setAppliedCoupons] = useState([]);
+  const discountCode = useMemo(() => appliedCoupons.map((c) => c.code).join(", "), [appliedCoupons]);
+  const appliedCoupon = appliedCoupons[0] || null;
+  const setAppliedCoupon = (val) => setAppliedCoupons(val ? [val] : []);
+  const setDiscountCode = (val) => {};
   const [checkoutDraft, setCheckoutDraft] = useState({
     customer: null,
     paymentMethod: "cash_on_delivery",
@@ -1100,19 +1103,39 @@ async function placeOrder({ customer, paymentMethod, paymentReference }) {
   }, [meta?.shipping, subtotal, checkoutDraft?.paymentMethod]);
   
   const discountAmount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    const { type, value } = appliedCoupon;
-    if (type === "percent") {
-      return Number((subtotal * (value / 100)).toFixed(2));
+    if (!appliedCoupons || appliedCoupons.length === 0) return 0;
+
+    let totalDiscount = 0;
+    let tempShippingCost = shippingCost;
+
+    for (const coupon of appliedCoupons) {
+      const { type, value, productId } = coupon;
+
+      let targetItem = null;
+      if (productId) {
+        targetItem = cartItems.find((item) => item.id === productId);
+        if (!targetItem) {
+          continue; // Skip product-specific discount if the laptop is not in cart
+        }
+      }
+
+      let currentDiscount = 0;
+      if (type === "percent") {
+        const baseForDiscount = targetItem ? targetItem.lineTotal : subtotal;
+        currentDiscount = Number((baseForDiscount * (value / 100)).toFixed(2));
+      } else if (type === "fixed") {
+        const baseForDiscount = targetItem ? targetItem.lineTotal : subtotal;
+        currentDiscount = Number(Math.min(value, baseForDiscount).toFixed(2));
+      } else if (type === "free_shipping") {
+        currentDiscount = tempShippingCost;
+        tempShippingCost = 0;
+      }
+
+      totalDiscount += currentDiscount;
     }
-    if (type === "fixed") {
-      return value;
-    }
-    if (type === "free_shipping") {
-      return shippingCost;
-    }
-    return 0;
-  }, [appliedCoupon, subtotal, shippingCost]);
+
+    return Number(totalDiscount.toFixed(2));
+  }, [appliedCoupons, subtotal, shippingCost, cartItems]);
 
   const total = useMemo(() => Number(Math.max(0, subtotal + shippingCost - discountAmount).toFixed(2)), [shippingCost, subtotal, discountAmount]);
   const cartCount = useMemo(
@@ -1144,6 +1167,8 @@ async function placeOrder({ customer, paymentMethod, paymentReference }) {
     setDiscountCode,
     appliedCoupon,
     setAppliedCoupon,
+    appliedCoupons,
+    setAppliedCoupons,
     discountAmount,
     total,
     addToCart,
@@ -2484,16 +2509,14 @@ function StoreCartPage() {
     isCustomerAuthenticated,
     discountAmount,
     discountCode,
-    setDiscountCode,
-    setAppliedCoupon,
+    appliedCoupons,
+    setAppliedCoupons,
     customerSession,
+    meta,
+    products,
   } = useStore();
 
-  const [promoInput, setPromoInput] = useState(discountCode);
-
-  useEffect(() => {
-    setPromoInput(discountCode);
-  }, [discountCode]);
+  const [promoInput, setPromoInput] = useState("");
 
   if (cartItems.length === 0) {
     return (
@@ -2581,6 +2604,75 @@ function StoreCartPage() {
           <span>{tr("Total", "الإجمالي")}</span>
           <strong>{formatPrice(total)}</strong>
         </p>
+        {appliedCoupons.map((coupon) => {
+          if (coupon.productId && !cartItems.some((item) => item.id === coupon.productId)) {
+            const prod = products.find((p) => p.id === coupon.productId);
+            return (
+              <div key={coupon.code} style={{
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgb(239, 68, 68)",
+                color: "rgb(239, 68, 68)",
+                padding: "0.6rem 0.8rem",
+                borderRadius: "6px",
+                fontSize: "0.85rem",
+                marginTop: "0.5rem",
+                lineHeight: "1.4"
+              }}>
+                ⚠️ {tr(
+                  `Coupon ${coupon.code} is only valid for ${prod?.laptopName || "a specific product"}.`,
+                  `كود الخصم ${coupon.code} صالح فقط لمنتج ${prod?.laptopNameAr || prod?.laptopName || "لاب توب محدد"}.`
+                )}
+              </div>
+            );
+          }
+          return null;
+        })}
+        {appliedCoupons.length > 0 && (
+          <div style={{ marginTop: "1rem", display: "grid", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: "bold", color: "var(--muted)" }}>
+              {tr("Applied Coupons:", "الكوبونات المطبقة:")}
+            </span>
+            {appliedCoupons.map((coupon) => (
+              <div
+                key={coupon.code}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "rgba(16, 185, 129, 0.1)",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  padding: "0.4rem 0.6rem",
+                  borderRadius: "4px",
+                  fontSize: "0.85rem",
+                }}
+              >
+                <span>
+                  <strong>{coupon.code}</strong>{" "}
+                  <span style={{ color: "var(--muted)", fontSize: "0.78rem" }}>
+                    ({coupon.type === "percent" ? `${coupon.value}%` : coupon.type === "fixed" ? `${coupon.value} EGP` : tr("Free Shipping", "شحن مجاني")})
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppliedCoupons((prev) => prev.filter((c) => c.code !== coupon.code));
+                    toast.success(tr(`Promo code ${coupon.code} removed.`, `تم إزالة كود الخصم ${coupon.code}.`));
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "rgb(239, 68, 68)",
+                    cursor: "pointer",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {tr("Remove", "إزالة")}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
           <input
             type="text"
@@ -2602,9 +2694,20 @@ function StoreCartPage() {
             onClick={async () => {
               const code = promoInput.trim().toUpperCase();
               if (code === "") {
-                setDiscountCode("");
-                setAppliedCoupon(null);
-                toast.success(tr("Promo code removed.", "تم إزالة كود الخصم."));
+                return;
+              }
+              if (appliedCoupons.some((c) => c.code === code)) {
+                toast.error(tr("This promo code is already applied.", "تم تطبيق كود الخصم هذا بالفعل."));
+                return;
+              }
+              const maxAllowed = Number(meta?.maxCouponsPerOrder || 1);
+              if (appliedCoupons.length >= maxAllowed) {
+                toast.error(
+                  tr(
+                    `Maximum number of coupons allowed is ${maxAllowed}.`,
+                    `الحد الأقصى للكوبونات المسموح بها هو ${maxAllowed}.`
+                  )
+                );
                 return;
               }
               try {
@@ -2619,8 +2722,8 @@ function StoreCartPage() {
                   headers,
                 });
                 if (response.data?.coupon) {
-                  setAppliedCoupon(response.data.coupon);
-                  setDiscountCode(code);
+                  setAppliedCoupons((prev) => [...prev, response.data.coupon]);
+                  setPromoInput("");
                   toast.success(tr("Promo code applied!", "تم تطبيق كود الخصم!"));
                 } else {
                   toast.error(tr("Invalid promo code.", "كود الخصم غير صالح."));
