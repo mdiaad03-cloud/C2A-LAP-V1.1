@@ -193,6 +193,7 @@ const validateCouponHandler = asyncHandler(async (req, res) => {
       code: coupon.code,
       type: coupon.type,
       value: coupon.value,
+      productId: coupon.productId || null,
     },
   });
 });
@@ -259,6 +260,7 @@ router.get(
     res.json({
       brand: "C2A LAP",
       baseCurrency: "EGP",
+      maxCouponsPerOrder: Number(db.storeSettings?.maxCouponsPerOrder ?? 1),
       shipping: {
         flatRate: Number(db.storeSettings?.shippingFlatRate || 0),
         freeShippingThreshold: Number(db.storeSettings?.freeShippingThreshold || 0),
@@ -475,10 +477,13 @@ router.post(
     db.onlineOrders = db.onlineOrders.slice(0, 5000);
 
     if (order.discountCode) {
-      const coupon = db.coupons?.find((c) => c.code.toUpperCase() === order.discountCode.toUpperCase());
-      if (coupon) {
-        coupon.usageCount = (coupon.usageCount || 0) + 1;
-        coupon.updatedAt = nowIso();
+      const codes = String(order.discountCode).split(/,\s*/g).map((c) => c.trim().toUpperCase()).filter(Boolean);
+      for (const code of codes) {
+        const coupon = db.coupons?.find((c) => c.code.toUpperCase() === code);
+        if (coupon) {
+          coupon.usageCount = (coupon.usageCount || 0) + 1;
+          coupon.updatedAt = nowIso();
+        }
       }
     }
 

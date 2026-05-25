@@ -135,10 +135,13 @@ router.post(
     db.onlineOrders = db.onlineOrders.slice(0, 5000);
 
     if (order.discountCode) {
-      const coupon = db.coupons?.find((c) => c.code.toUpperCase() === order.discountCode.toUpperCase());
-      if (coupon) {
-        coupon.usageCount = (coupon.usageCount || 0) + 1;
-        coupon.updatedAt = nowIso();
+      const codes = String(order.discountCode).split(/,\s*/g).map((c) => c.trim().toUpperCase()).filter(Boolean);
+      for (const code of codes) {
+        const coupon = db.coupons?.find((c) => c.code.toUpperCase() === code);
+        if (coupon) {
+          coupon.usageCount = (coupon.usageCount || 0) + 1;
+          coupon.updatedAt = nowIso();
+        }
       }
     }
 

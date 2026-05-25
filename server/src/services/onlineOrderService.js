@@ -252,46 +252,81 @@ export function buildOrderPayload({ db, items, customer, paymentMethod, discount
   }
 
   let discountAmount = 0;
-  const normalizedCode = String(discountCode || "").trim().toUpperCase();
-  if (normalizedCode) {
-    const coupon = db.coupons?.find(
-      (c) => c.code.toUpperCase() === normalizedCode && c.isActive
-    );
-    if (coupon) {
-      if (coupon.usageLimit > 0 && (coupon.usageCount || 0) >= coupon.usageLimit) {
-        const error = new Error("This coupon usage limit has been reached.");
-        error.status = 400;
-        throw error;
-      }
+  const maxCouponsPerOrder = Number(db.storeSettings?.maxCouponsPerOrder || 1);
+  const codes = typeof discountCode === "string"
+    ? discountCode.split(/,\s*/g).map((c) => c.trim().toUpperCase()).filter(Boolean)
+    : (Array.isArray(discountCode) ? discountCode.map((c) => String(c || "").trim().toUpperCase()).filter(Boolean) : []);
 
-      if (coupon.isFirstOrderOnly) {
-        const email = String(customer?.email || "").trim().toLowerCase();
-        const hasOrdered = db.onlineOrders.some(
-          (order) =>
-            String(order.customerEmail || "").trim().toLowerCase() === email &&
-            order.status !== "cancelled"
-        );
-        if (hasOrdered) {
-          const error = new Error("This coupon is only valid for your first order.");
-          error.status = 400;
-          throw error;
-        }
-      }
-      
-      if (coupon.type === "percent") {
-        discountAmount = toMoney(subtotal * (coupon.value / 100));
-      } else if (coupon.type === "fixed") {
-        discountAmount = toMoney(coupon.value);
-      } else if (coupon.type === "free_shipping") {
-        discountAmount = shippingCost;
-        shippingCost = 0;
-      }
-    } else {
-      const error = new Error("Invalid or inactive coupon code.");
+  if (codes.length > maxCouponsPerOrder) {
+    const error = new Error(`You can apply a maximum of ${maxCouponsPerOrder} coupon(s) per order.`);
+    error.status = 400;
+    throw error;
+  }
+
+  const seenCodes = new Set();
+  for (const code of codes) {
+    if (seenCodes.has(code)) {
+      const error = new Error(`Duplicate coupon code: ${code}`);
       error.status = 400;
       throw error;
     }
+    seenCodes.add(code);
+
+    const coupon = db.coupons?.find((c) => c.code.toUpperCase() === code && c.isActive);
+    if (!coupon) {
+      const error = new Error(`Invalid or inactive coupon code: ${code}`);
+      error.status = 400;
+      throw error;
+    }
+
+    if (coupon.usageLimit > 0 && (coupon.usageCount || 0) >= coupon.usageLimit) {
+      const error = new Error(`This coupon usage limit has been reached for code: ${code}`);
+      error.status = 400;
+      throw error;
+    }
+
+    if (coupon.isFirstOrderOnly) {
+      const email = String(customer?.email || "").trim().toLowerCase();
+      const hasOrdered = db.onlineOrders.some(
+        (order) =>
+          String(order.customerEmail || "").trim().toLowerCase() === email &&
+          order.status !== "cancelled"
+      );
+      if (hasOrdered) {
+        const error = new Error(`This coupon is only valid for your first order: ${code}`);
+        error.status = 400;
+        throw error;
+      }
+    }
+    
+    let targetItem = null;
+    if (coupon.productId) {
+      targetItem = sanitizedItems.find((item) => item.productId === coupon.productId);
+      if (!targetItem) {
+        const matchedProd = db.products?.find((p) => p.id === coupon.productId);
+        const prodName = matchedProd ? matchedProd.laptopName : "a specific product";
+        const error = new Error(`This promo code ${code} is only valid for ${prodName}.`);
+        error.status = 400;
+        throw error;
+      }
+    }
+
+    let currentDiscount = 0;
+    if (coupon.type === "percent") {
+      const baseForDiscount = targetItem ? targetItem.lineTotal : subtotal;
+      currentDiscount = toMoney(baseForDiscount * (coupon.value / 100));
+    } else if (coupon.type === "fixed") {
+      const baseForDiscount = targetItem ? targetItem.lineTotal : subtotal;
+      currentDiscount = toMoney(Math.min(coupon.value, baseForDiscount));
+    } else if (coupon.type === "free_shipping") {
+      currentDiscount = shippingCost;
+      shippingCost = 0;
+    }
+
+    discountAmount = toMoney(discountAmount + currentDiscount);
   }
+
+  const normalizedCode = codes.join(", ");
 
   const total = toMoney(Math.max(0, subtotal + shippingCost - discountAmount));
 

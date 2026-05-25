@@ -828,6 +828,7 @@ export default function App() {
             {activeTab === "coupons" && isAdmin ? (
               <CouponsSection
                 coupons={coupons}
+                products={products}
                 onCreateCoupon={createCoupon}
                 onUpdateCoupon={updateCoupon}
                 onDeleteCoupon={deleteCoupon}
