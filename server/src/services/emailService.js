@@ -282,6 +282,37 @@ export async function sendOrderStatusEmail({ order, previousStatus }) {
             </div>`
           : ""
       }
+      ${
+        status === "delivered"
+          ? `<div style="margin-top: 24px; padding: 20px; border: 2px solid #0f766e; border-radius: 18px; background: #f0fdfa; direction: rtl; text-align: right; font-family: Arial, sans-serif;">
+              <h3 style="margin: 0 0 12px 0; color: #0f766e; font-size: 18px;">
+                🛡️ وثيقة الضمان والصيانة الرسمية (C2A LAP)
+              </h3>
+              <p style="margin: 0 0 16px 0; color: #374151; font-size: 14px; line-height: 1.6;">
+                عميلنا العزيز، تهانينا على استلام جهازك الجديد! نود إعلامك بتفاصيل الضمان والصيانة الخاصة بجهازك لضمان أفضل تجربة استخدام:
+              </p>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #4b5563; font-size: 14px;"><strong>مدة الضمان الفني:</strong></td>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 14px; font-weight: bold;">3 أشهر كاملة (من تاريخ الاستلام الفعلي)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #4b5563; font-size: 14px;"><strong>فترة الاستبدال والاسترجاع:</strong></td>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 14px; font-weight: bold;">14 يوماً (بشرط عدم وجود عيب ناتج عن سوء الاستخدام)</td>
+                </tr>
+              </table>
+              <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 14px;">⚠️ شروط وأحكام الضمان:</h4>
+              <ul style="margin: 0 0 16px 0; padding-right: 20px; color: #4b5563; font-size: 13px; line-height: 1.7;">
+                <li>يسري الضمان بالكامل ضد عيوب الصناعة والأعطال الفنية والعتاد (Hardware).</li>
+                <li>يُستثنى من الضمان الأعطال الناتجة عن سوء الاستخدام مثل (الكسر، السوائل، استخدام شواحن غير مطابقة).</li>
+                <li>يُعتبر الضمان لاغياً في حال محاولة فتح الجهاز خارج مركز صيانة C2A LAP المعتمد أو إزالة ملصق الضمان.</li>
+              </ul>
+              <div style="border-top: 1px dashed #0f766e; padding-top: 12px; font-size: 13px; color: #0f766e; font-weight: bold; text-align: center;">
+                لأي استفسارات أو طلبات صيانة، يرجى التواصل معنا عبر البريد الإلكتروني أو الواتساب الرسمي.
+              </div>
+            </div>`
+          : ""
+      }
     `,
     footerNote: "Keep this email for reference until the order cycle is complete. / يرجى الاحتفاظ بهذا الإيميل للرجوع إليه حتى اكتمال التوصيل.",
   });

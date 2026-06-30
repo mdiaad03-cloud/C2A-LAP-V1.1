@@ -434,21 +434,22 @@ export async function sendOrderStatusMessage(order, previousStatus) {
   const db = await getDb();
   let templateKey = "";
 
+  // WhatsApp messages to customer are ONLY sent for confirmation and cancellation.
   if (status === "confirmed") templateKey = "order_confirmed";
-  else if (status === "shipped") templateKey = "order_shipped";
-  else if (status === "delivered") templateKey = "order_delivered";
   else if (status === "cancelled") templateKey = "order_cancelled";
-  else return null;
 
-  const template = db.whatsappTemplates?.[templateKey] || DEFAULT_TEMPLATES[templateKey];
-  const instapayAddress = db.storeSettings?.features?.instapayAddress || "mdiaad003@instapay";
-  const instapayLink = db.storeSettings?.features?.instapayLink || "https://ipn.eg/S/mdiaad003/instapay/3ZmQsm";
-  const messageText = replaceTemplateVariables(template, order, instapayAddress, instapayLink);
+  let result = null;
+  if (templateKey) {
+    const template = db.whatsappTemplates?.[templateKey] || DEFAULT_TEMPLATES[templateKey];
+    const instapayAddress = db.storeSettings?.features?.instapayAddress || "mdiaad003@instapay";
+    const instapayLink = db.storeSettings?.features?.instapayLink || "https://ipn.eg/S/mdiaad003/instapay/3ZmQsm";
+    const messageText = replaceTemplateVariables(template, order, instapayAddress, instapayLink);
 
-  // Send message to customer
-  const result = await sendWhatsAppMessage(order.customerPhone, messageText, order.id);
+    // Send message to customer
+    result = await sendWhatsAppMessage(order.customerPhone, messageText, order.id);
+  }
 
-  // Send status alert to admin
+  // Send status alert to admin (sent to admin email)
   const statusLabels = {
     pending: "معلق ⏳",
     confirmed: "مؤكد ✅",
