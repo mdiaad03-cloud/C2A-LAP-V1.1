@@ -26,5 +26,11 @@ export function calculateWarranty(inputDate, warrantyMonths) {
 }
 
 export function calculateProfit(sellingPrice, purchasePrice, shippingCost) {
-  return Number(sellingPrice) - Number(purchasePrice) - Number(shippingCost || 0);
+  const price = Number(sellingPrice);
+  if (price <= 0) return 0;
+  if (price < 20000) return 300;
+  if (price >= 20000 && price < 25000) return 400;
+  if (price >= 25000 && price < 30000) return 500;
+  if (price >= 30000 && price < 35000) return 600;
+  return 700;
 }

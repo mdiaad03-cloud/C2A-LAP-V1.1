@@ -105,7 +105,7 @@ router.post(
       purchasePrice,
       sellingPrice,
       shippingCost,
-      profit: (sellingPrice < 15000 && sellingPrice > 0) ? 300 : Number(calculateProfit(sellingPrice, purchasePrice, shippingCost).toFixed(2)),
+      profit: Number(calculateProfit(sellingPrice).toFixed(2)),
       purchaseDate: warranty.purchaseDate,
       warrantyMonths: warranty.warrantyMonths,
       warrantyEndDate: warranty.warrantyEndDate,
@@ -220,7 +220,7 @@ router.put(
       sale.returnExpired = warranty.returnExpired;
     }
 
-    sale.profit = (sale.sellingPrice < 15000 && sale.sellingPrice > 0) ? 300 : Number(calculateProfit(sale.sellingPrice, sale.purchasePrice, sale.shippingCost).toFixed(2));
+    sale.profit = Number(calculateProfit(sale.sellingPrice).toFixed(2));
     sale.updatedAt = nowIso();
 
     await saveDb();

@@ -499,9 +499,7 @@ export function createSalesFromOnlineOrder(db, order, employee) {
       purchasePrice: linePurchasePrice,
       sellingPrice: lineSellingPrice,
       shippingCost: lineShipping,
-      profit: (lineSellingPrice / Math.max(1, Number(item.quantity || 1)) < 15000) 
-        ? toMoney(300 * Math.max(1, Number(item.quantity || 1)))
-        : toMoney(calculateProfit(lineSellingPrice, linePurchasePrice, lineShipping)),
+      profit: toMoney(calculateProfit(lineSellingPrice / Math.max(1, Number(item.quantity || 1))) * Math.max(1, Number(item.quantity || 1))),
       purchaseDate: warranty.purchaseDate,
       warrantyMonths: warranty.warrantyMonths,
       warrantyEndDate: warranty.warrantyEndDate,
