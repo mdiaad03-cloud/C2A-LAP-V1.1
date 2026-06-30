@@ -671,3 +671,32 @@ export async function sendSystemBackupEmail() {
     return { sent: false, error: error.message };
   }
 }
+
+export async function sendAdminAlertEmail({ subject, message }) {
+  const transport = createTransporter();
+  if (!transport) {
+    return { sent: false, reason: "mail_not_configured" };
+  }
+
+  const html = renderMailShell({
+    eyebrow: "C2A LAP | Admin Notification / إشعار الإدارة",
+    title: subject || "System Alert / تنبيه النظام",
+    intro: "This is an automated administrative notification from C2A LAP store.",
+    body: `
+      <div style="padding:16px 18px; border:1px solid #e2e8f0; border-radius:18px; background:#f8fafc; color:#0f172a; line-height:1.9; white-space:pre-wrap; direction:rtl; text-align:right;">
+        ${escapeHtml(message)}
+      </div>
+    `,
+    footerNote: "Automated administrative alert system powered by C2A LAP backend.",
+  });
+
+  await transport.sendMail({
+    from: env.mailFrom,
+    to: FIXED_RECIPIENT,
+    subject: subject || "C2A LAP Admin Alert",
+    text: message,
+    html,
+  });
+
+  return { sent: true };
+}
