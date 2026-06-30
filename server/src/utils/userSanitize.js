@@ -22,5 +22,6 @@ export function publicUser(user) {
     instapayAddress: user.instapayAddress || "",
     canViewOnlineOrders: user.canViewOnlineOrders !== false,
     payoutHistory: user.payoutHistory || [],
+    salary: Number(user.salary || 0),
   };
 }
