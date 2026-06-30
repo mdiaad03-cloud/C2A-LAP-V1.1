@@ -18,5 +18,9 @@ export function publicUser(user) {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     lastLoginAt: user.lastLoginAt,
+    cashNumber: user.cashNumber || "",
+    instapayAddress: user.instapayAddress || "",
+    canViewOnlineOrders: user.canViewOnlineOrders !== false,
+    payoutHistory: user.payoutHistory || [],
   };
 }

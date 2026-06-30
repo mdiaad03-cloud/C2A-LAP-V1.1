@@ -93,7 +93,7 @@ router.post(
     const sellingPrice = requirePositiveNumber(req.body.sellingPrice, "Selling price");
     const shippingCost = requirePositiveNumber(req.body.shippingCost || 0, "Shipping cost");
 
-    const warrantyMonths = requirePositiveInteger(req.body.warrantyMonths || 12, "Warranty duration");
+    const warrantyMonths = requirePositiveInteger(req.body.warrantyMonths || 3, "Warranty duration");
     const warranty = calculateWarranty(req.body.purchaseDate, warrantyMonths);
 
     const sale = {
@@ -105,7 +105,7 @@ router.post(
       purchasePrice,
       sellingPrice,
       shippingCost,
-      profit: Number(calculateProfit(sellingPrice, purchasePrice, shippingCost).toFixed(2)),
+      profit: (sellingPrice < 15000 && sellingPrice > 0) ? 300 : Number(calculateProfit(sellingPrice, purchasePrice, shippingCost).toFixed(2)),
       purchaseDate: warranty.purchaseDate,
       warrantyMonths: warranty.warrantyMonths,
       warrantyEndDate: warranty.warrantyEndDate,
@@ -220,7 +220,7 @@ router.put(
       sale.returnExpired = warranty.returnExpired;
     }
 
-    sale.profit = Number(calculateProfit(sale.sellingPrice, sale.purchasePrice, sale.shippingCost).toFixed(2));
+    sale.profit = (sale.sellingPrice < 15000 && sale.sellingPrice > 0) ? 300 : Number(calculateProfit(sale.sellingPrice, sale.purchasePrice, sale.shippingCost).toFixed(2));
     sale.updatedAt = nowIso();
 
     await saveDb();

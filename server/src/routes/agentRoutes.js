@@ -208,7 +208,7 @@ function createProductFromDraft(draft) {
     sellingPrice: Number(parseNumber(draft.sellingPrice, 0).toFixed(2)),
     price: Number(parseNumber(draft.sellingPrice, 0).toFixed(2)),
     stock: Math.max(0, Number.parseInt(draft.stock, 10) || 0),
-    warrantyMonths: Math.max(1, Number.parseInt(draft.warrantyMonths, 10) || 12),
+    warrantyMonths: Math.max(1, Number.parseInt(draft.warrantyMonths, 10) || 3),
     discountPercent: Math.max(0, Number(parseNumber(draft.discountPercent, 0).toFixed(2))),
     description: asOptionalText(draft.description),
     descriptionAr: asOptionalText(draft.descriptionAr),
