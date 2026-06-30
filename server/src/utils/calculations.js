@@ -3,10 +3,10 @@ import { daysBetween, todayDate } from "./dateUtils.js";
 
 export function calculateWarranty(inputDate, warrantyMonths) {
   const purchaseDate = inputDate ? dayjs(inputDate) : dayjs(todayDate());
-  const normalizedMonths = Number(warrantyMonths) > 0 ? Number(warrantyMonths) : 1;
+  const normalizedMonths = Number(warrantyMonths) > 0 ? Number(warrantyMonths) : 3;
 
   const warrantyEnd = purchaseDate.add(normalizedMonths, "month").endOf("day");
-  const replacementDeadline = purchaseDate.add(Math.min(normalizedMonths, 1), "month").endOf("day");
+  const replacementDeadline = purchaseDate.add(14, "day").endOf("day");
   const returnDeadline = purchaseDate.add(14, "day").endOf("day");
 
   const warrantyDaysRemaining = Math.max(daysBetween(dayjs(), warrantyEnd), 0);

@@ -75,6 +75,12 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     const db = await getDb();
+    const currentUser = db.users.find(u => u.id === req.user.id);
+    const canView = req.user.role === "admin" || (currentUser && currentUser.canViewOnlineOrders !== false);
+
+    if (!canView) {
+      return res.status(403).json({ error: "You do not have permission to view online orders." });
+    }
 
     const visibleOrders = (req.user.role === "admin" || req.user.role === "sales")
       ? db.onlineOrders
@@ -103,6 +109,13 @@ router.put(
   authorize("admin", "sales"),
   asyncHandler(async (req, res) => {
     const db = await getDb();
+    const currentUser = db.users.find(u => u.id === req.user.id);
+    const canView = req.user.role === "admin" || (currentUser && currentUser.canViewOnlineOrders !== false);
+
+    if (!canView) {
+      return res.status(403).json({ error: "You do not have permission to manage online orders." });
+    }
+
     const order = db.onlineOrders.find((entry) => entry.id === req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Online order not found." });
@@ -271,6 +284,13 @@ router.post(
   screenshotUpload.array("screenshots", 3),
   asyncHandler(async (req, res) => {
     const db = await getDb();
+    const currentUser = db.users.find(u => u.id === req.user.id);
+    const canView = req.user.role === "admin" || (currentUser && currentUser.canViewOnlineOrders !== false);
+
+    if (!canView) {
+      return res.status(403).json({ error: "You do not have permission to manage online orders." });
+    }
+
     const order = db.onlineOrders.find((entry) => entry.id === req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Online order not found." });

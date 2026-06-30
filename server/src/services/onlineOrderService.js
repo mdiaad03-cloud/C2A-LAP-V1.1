@@ -101,7 +101,7 @@ export function normalizeStoreProduct(product) {
     discountedPrice,
     availability: stock > 0 ? "in_stock" : "out_of_stock",
     stock,
-    warrantyMonths: Math.max(1, Number.parseInt(product.warrantyMonths || 12, 10) || 12),
+    warrantyMonths: Math.max(1, Number.parseInt(product.warrantyMonths || 3, 10) || 3),
     imageUrls: parseImageUrls(product.imageUrls),
     description:
       asOptionalText(product.description) ||
@@ -487,7 +487,7 @@ export function createSalesFromOnlineOrder(db, order, employee) {
 
     const linePurchasePrice = toMoney(Number(item.purchasePrice || 0) * Number(item.quantity || 0));
     const lineSellingPrice = toMoney(item.lineTotal || 0);
-    const warranty = calculateWarranty(order.createdAt, item.warrantyMonths || 12);
+    const warranty = calculateWarranty(order.createdAt, item.warrantyMonths || 3);
 
     const sale = {
       id: nanoid(),
@@ -499,7 +499,9 @@ export function createSalesFromOnlineOrder(db, order, employee) {
       purchasePrice: linePurchasePrice,
       sellingPrice: lineSellingPrice,
       shippingCost: lineShipping,
-      profit: toMoney(calculateProfit(lineSellingPrice, linePurchasePrice, lineShipping)),
+      profit: (lineSellingPrice / Math.max(1, Number(item.quantity || 1)) < 15000) 
+        ? toMoney(300 * Math.max(1, Number(item.quantity || 1)))
+        : toMoney(calculateProfit(lineSellingPrice, linePurchasePrice, lineShipping)),
       purchaseDate: warranty.purchaseDate,
       warrantyMonths: warranty.warrantyMonths,
       warrantyEndDate: warranty.warrantyEndDate,

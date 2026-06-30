@@ -80,6 +80,9 @@ router.post(
     const password = requireText(req.body.password, "Password");
     const role = sanitizeRole(req.body.role);
     const avatarUrl = asOptionalText(req.body.avatarUrl);
+    const cashNumber = asOptionalText(req.body.cashNumber) || "";
+    const instapayAddress = asOptionalText(req.body.instapayAddress) || "";
+    const canViewOnlineOrders = req.body.canViewOnlineOrders !== false;
 
     const existing = db.users.find((entry) => entry.username.toLowerCase() === username.toLowerCase());
     if (existing) {
@@ -94,6 +97,10 @@ router.post(
       passwordHash: await bcrypt.hash(password, 10),
       role,
       isActive: true,
+      cashNumber,
+      instapayAddress,
+      canViewOnlineOrders,
+      payoutHistory: [],
       createdAt: nowIso(),
       updatedAt: nowIso(),
       lastLoginAt: null,
@@ -111,6 +118,52 @@ router.post(
     });
 
     res.status(201).json({ user: publicUser(user) });
+  }),
+);
+
+// Route to let any authenticated user update their own profile details (Cash and InstaPay address)
+router.put(
+  "/profile",
+  asyncHandler(async (req, res) => {
+    const db = await getDb();
+    const user = db.users.find((entry) => entry.id === req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    if (req.body.name !== undefined) {
+      user.name = requireText(req.body.name, "Name");
+    }
+
+    if (req.body.cashNumber !== undefined) {
+      user.cashNumber = asOptionalText(req.body.cashNumber) || "";
+    }
+
+    if (req.body.instapayAddress !== undefined) {
+      user.instapayAddress = asOptionalText(req.body.instapayAddress) || "";
+    }
+
+    if (req.body.avatarUrl !== undefined) {
+      user.avatarUrl = asOptionalText(req.body.avatarUrl);
+    }
+
+    if (req.body.password) {
+      user.passwordHash = await bcrypt.hash(requireText(req.body.password, "Password"), 10);
+    }
+
+    user.updatedAt = nowIso();
+    await saveDb();
+
+    await addLog({
+      action: "update-profile",
+      module: "users",
+      user: req.user,
+      details: `User ${user.username} updated their own profile settings`,
+      ip: req.ip,
+    });
+
+    res.json({ user: publicUser(user) });
   }),
 );
 
@@ -141,6 +194,37 @@ router.put(
       user.avatarUrl = asOptionalText(req.body.avatarUrl);
     }
 
+    if (req.body.cashNumber !== undefined) {
+      user.cashNumber = asOptionalText(req.body.cashNumber) || "";
+    }
+
+    if (req.body.instapayAddress !== undefined) {
+      user.instapayAddress = asOptionalText(req.body.instapayAddress) || "";
+    }
+
+    if (req.body.canViewOnlineOrders !== undefined) {
+      user.canViewOnlineOrders = Boolean(req.body.canViewOnlineOrders);
+    }
+
+    // Add a payout to user's history
+    if (req.body.payoutAmount !== undefined) {
+      const payoutAmount = Number(req.body.payoutAmount);
+      if (payoutAmount > 0) {
+        user.payoutHistory = user.payoutHistory || [];
+        user.payoutHistory.unshift({
+          id: nanoid(),
+          amount: payoutAmount,
+          notes: asOptionalText(req.body.payoutNotes) || "Manual Payout / تحويل مالي",
+          createdAt: nowIso(),
+        });
+      }
+    }
+
+    // Delete a payout if requested
+    if (req.body.deletePayoutId) {
+      user.payoutHistory = (user.payoutHistory || []).filter(p => p.id !== req.body.deletePayoutId);
+    }
+
     if (req.body.password) {
       user.passwordHash = await bcrypt.hash(requireText(req.body.password, "Password"), 10);
     }
@@ -152,7 +236,7 @@ router.put(
       action: "update",
       module: "users",
       user: req.user,
-      details: `Updated user ${user.username}`,
+      details: `Updated user ${user.username} (admin control)`,
       ip: req.ip,
     });
 

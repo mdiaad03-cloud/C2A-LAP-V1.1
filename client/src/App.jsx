@@ -14,6 +14,7 @@ import {
   Truck,
   Users,
   Tag,
+  User,
 } from "lucide-react";
 import api from "./lib/api";
 import { useAuth } from "./context/useAuth";
@@ -33,6 +34,7 @@ import StoreSettingsSection from "./sections/StoreSettingsSection";
 import AgentSection from "./sections/AgentSection";
 import CouponsSection from "./sections/CouponsSection";
 import WhatsappBotSection from "./sections/WhatsappBotSection";
+import ProfileSection from "./sections/ProfileSection";
 import "./App.css";
 
 const THEME_KEY = "c2a_lap_theme_v1";
@@ -192,37 +194,46 @@ export default function App() {
     }
   }, [lang, isArabic]);
 
+  const canViewOnlineOrdersTab = isAdmin || (user?.role === "sales" && user?.canViewOnlineOrders !== false);
+
   const navItems = useMemo(() => {
     const base = [];
 
     if (canViewSalesWorkspace) {
-      base.push({ key: "dashboard", label: tr("Dashboard", "\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645"), icon: LayoutDashboard });
-      base.push({ key: "sales", label: tr("Sales", "\u0627\u0644\u0645\u062b\u064a\u0639\u0627\u062a"), icon: BarChart3 });
-      base.push({ key: "contacts", label: tr("Contacts", "\u0627\u0644\u0639\u0645\u0644\u0627\u0621"), icon: Contact });
-      base.push({ key: "products", label: tr("Products", "\u0645\u0646\u062a\u062c\u0627\u062a"), icon: Package });
-      base.push({
-        key: "onlineOrders",
-        label: tr("Online Orders", "\u0627\u0644\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629"),
-        icon: ShoppingCart,
-      });
-      base.push({ key: "shipping", label: tr("Shipping", "\u0627\u0644\u0634\u062d\u0646"), icon: Truck });
+      base.push({ key: "dashboard", label: tr("Dashboard", "لوحة التحكم"), icon: LayoutDashboard });
+      base.push({ key: "sales", label: tr("Sales", "المبيعات"), icon: BarChart3 });
+      base.push({ key: "contacts", label: tr("Contacts", "العملاء"), icon: Contact });
+      base.push({ key: "products", label: tr("Products", "منتجات"), icon: Package });
+      if (canViewOnlineOrdersTab) {
+        base.push({
+          key: "onlineOrders",
+          label: tr("Online Orders", "الطلب الالكتروني"),
+          icon: ShoppingCart,
+        });
+      }
+      base.push({ key: "shipping", label: tr("Shipping", "الشحن"), icon: Truck });
     } else if (canManageProducts) {
-      base.push({ key: "products", label: tr("Products", "\u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a"), icon: Package });
+      base.push({ key: "products", label: tr("Products", "المنتجات"), icon: Package });
     }
 
     if (isAdmin) {
-      base.push({ key: "profits", label: tr("Profits", "\u0627\u0644\u0623\u0631\u0628\u0627\u062d"), icon: FileText });
+      base.push({ key: "profits", label: tr("Profits", "الأرباح"), icon: FileText });
       base.push({ key: "coupons", label: tr("Coupons", "الكوبونات"), icon: Tag });
-      base.push({ key: "agent", label: tr("Agent", "\u0627\u0644\u0625\u062c\u0646\u062a"), icon: Bot });
-      base.push({ key: "storeSettings", label: tr("Store Settings", "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631"), icon: Settings });
-      base.push({ key: "support", label: tr("Support", "\u0627\u0644\u062f\u0639\u0645"), icon: MessageCircle });
+      base.push({ key: "agent", label: tr("Agent", "الأجنت"), icon: Bot });
+      base.push({ key: "storeSettings", label: tr("Store Settings", "إعدادات المتجر"), icon: Settings });
+      base.push({ key: "support", label: tr("Support", "الدعم"), icon: MessageCircle });
       base.push({ key: "whatsapp", label: tr("WhatsApp Bot", "بوابة واتساب"), icon: MessageCircle });
-      base.push({ key: "users", label: tr("Users", "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646"), icon: Users });
-      base.push({ key: "logs", label: tr("Logs", "\u0627\u0644\u0633\u062c\u0644\u0627\u062a"), icon: Settings });
+      base.push({ key: "users", label: tr("Users", "المستخدمون"), icon: Users });
+      base.push({ key: "logs", label: tr("Logs", "السجلات"), icon: Settings });
+    }
+
+    // Every logged-in team member gets a profile view to manage their cash number & Instapay address
+    if (user) {
+      base.push({ key: "profile", label: tr("My Profile", "الملف الشخصي"), icon: User });
     }
 
     return base;
-  }, [canManageProducts, canViewSalesWorkspace, isAdmin, isArabic]);
+  }, [canManageProducts, canViewSalesWorkspace, canViewOnlineOrdersTab, isAdmin, isArabic, user]);
 
   useEffect(() => {
     if (navItems.length === 0) {
@@ -474,6 +485,15 @@ export default function App() {
   async function createUser(payload) {
     await api.post("/users", payload);
     await refreshAll();
+  }
+
+  async function updateProfile(payload) {
+    const response = await api.put("/users/profile", payload);
+    if (response.data?.user) {
+      setUser(response.data.user);
+    }
+    await refreshAll();
+    return response.data?.user;
   }
 
   async function updateUser(userId, payload) {
@@ -837,6 +857,14 @@ export default function App() {
             ) : null}
 
             {activeTab === "whatsapp" && isAdmin ? <WhatsappBotSection lang={lang} /> : null}
+            {activeTab === "profile" && user ? (
+              <ProfileSection
+                user={user}
+                onUpdateProfile={updateProfile}
+                onUploadAvatar={uploadUserAvatar}
+                lang={lang}
+              />
+            ) : null}
             {activeTab === "logs" && isAdmin ? <LogsSection logs={logs} lang={lang} /> : null}
           </Motion.div>
         </main>
