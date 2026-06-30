@@ -161,12 +161,26 @@ export function replaceTemplateVariables(template, order, instapayAddress = "", 
 }
 
 export async function sendWhatsAppAdminAlert(messageText) {
-  const adminPhone = "01068646465";
   try {
-    await sendWhatsAppMessage(adminPhone, messageText, "SYSTEM_ADMIN_ALERT");
-    console.log(`[WhatsApp Admin Alert] Notification sent to admin (${adminPhone})`);
+    const { sendAdminAlertEmail } = await import("./emailService.js");
+    
+    let subject = "تنبيه النظام - C2A LAP Alert";
+    if (messageText.includes("تأكيد") || messageText.includes("تاكيد")) {
+      subject = "تأكيد طلب جديد أونلاين ✅ - C2A LAP";
+    } else if (messageText.includes("إلغاء") || messageText.includes("الغاء")) {
+      subject = "إلغاء طلب أونلاين ❌ - C2A LAP";
+    } else if (messageText.includes("تحديث") || messageText.includes("حالة")) {
+      subject = "تحديث حالة طلب أونلاين 🔄 - C2A LAP";
+    }
+
+    const cleanText = messageText.replace(/\*/g, "");
+    await sendAdminAlertEmail({
+      subject,
+      message: cleanText,
+    });
+    console.log("[Admin Alert] Notification email sent successfully to mdiaad03@gmail.com");
   } catch (err) {
-    console.error("[WhatsApp Admin Alert] Failed to send alert to admin:", err.message);
+    console.error("[Admin Alert] Failed to send email alert to admin:", err.message);
   }
 }
 
