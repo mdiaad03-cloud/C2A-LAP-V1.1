@@ -323,114 +323,116 @@ export default function DashboardSection({ overview, isAdmin, lang = "en", onOpe
         </section>
       )}
 
-      <section className="charts-grid two">
-        <article className="panel">
-          <div className="panel-head">
-            <div className="inline-actions" style={{ gap: "8px" }}>
-              <span className="agent-icon-badge" style={{ backgroundColor: "#8b5cf6" }}>
-                <Bot size={16} style={{ color: "#fff" }} />
-              </span>
-              <h3>{tr("AI Operations Log", "سجل عمليات الذكاء الاصطناعي")}</h3>
-            </div>
-            <span>{tr("Real-time telemetry and automation events from the AI Agent.", "أحداث الأتمتة المباشرة من نظام الذكاء الاصطناعي.")}</span>
-          </div>
-
-          <div className="console-log-wrap" style={{
-            backgroundColor: "#0d0e12",
-            color: "#38bdf8",
-            fontFamily: "monospace",
-            fontSize: "12.5px",
-            padding: "16px",
-            borderRadius: "8px",
-            maxHeight: "350px",
-            overflowY: "auto",
-            border: "1px solid #1e293b",
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.6)"
-          }}>
-            {!overview.aiLogs || overview.aiLogs.length === 0 ? (
-              <p style={{ color: "#64748b", margin: 0 }}>{tr("// No AI operations logged in this session.", "// لم يتم تسجيل أي عمليات حالياً.")}</p>
-            ) : (
-              overview.aiLogs.map((log) => (
-                <div key={log.id} style={{ marginBottom: "8px", borderBottom: "1px dashed #1e293b", paddingBottom: "4px" }}>
-                  <span style={{ color: "#64748b" }}>[{new Date(log.timestamp).toLocaleTimeString()}]</span>{" "}
-                  <span style={{ color: "#a78bfa", fontWeight: "bold" }}>[agent:{log.action}]</span>{" "}
-                  <span style={{ color: "#e2e8f0" }}>{log.details}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="panel-head">
-            <h3>{tr("Activity Timeline", "الجدول الزمني للنشاط")}</h3>
-            <span>{tr("Chronological log of recent platform transactions and support events.", "سجل الأحداث الأخيرة للمبيعات والطلبات والدعم.")}</span>
-          </div>
-
-          <div className="timeline-wrap" style={{ maxHeight: "350px", overflowY: "auto", paddingRight: "8px" }}>
-            {!overview.timeline || overview.timeline.length === 0 ? (
-              <p className="empty-note">{tr("No recent activity.", "لا توجد نشاطات حديثة.")}</p>
-            ) : (
-              <div className="timeline-container" style={{
-                position: "relative",
-                paddingLeft: isArabic ? "0" : "20px",
-                paddingRight: isArabic ? "20px" : "0",
-                borderLeft: isArabic ? "none" : "2px solid #e2e8f0",
-                borderRight: isArabic ? "2px solid #e2e8f0" : "none"
-              }}>
-                {overview.timeline.map((event) => {
-                  let icon = <Info size={12} />;
-                  let iconBg = "#cbd5e1";
-                  
-                  if (event.type === "order_created") {
-                    icon = <ShoppingCart size={12} style={{ color: "#fff" }} />;
-                    iconBg = "#3b82f6";
-                  } else if (event.type === "order_status") {
-                    icon = <FileCheck size={12} style={{ color: "#fff" }} />;
-                    iconBg = "#10b981";
-                  } else if (event.type === "support_created" || event.type === "support_reply") {
-                    icon = <MessageSquare size={12} style={{ color: "#fff" }} />;
-                    iconBg = "#f59e0b";
-                  } else if (event.type === "sale_created") {
-                    icon = <BadgeDollarSign size={12} style={{ color: "#fff" }} />;
-                    iconBg = "#8b5cf6";
-                  }
-
-                  return (
-                    <div key={event.id} style={{ position: "relative", marginBottom: "16px" }}>
-                      <div style={{
-                        position: "absolute",
-                        left: isArabic ? "unset" : "-29px",
-                        right: isArabic ? "-29px" : "unset",
-                        top: "2px",
-                        width: "18px",
-                        height: "18px",
-                        borderRadius: "50%",
-                        backgroundColor: iconBg,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 0 0 4px #fff"
-                      }}>
-                        {icon}
-                      </div>
-                      <div style={{ paddingLeft: isArabic ? "0" : "10px", paddingRight: isArabic ? "10px" : "0" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <strong style={{ fontSize: "14px" }}>{isArabic ? event.titleAr || event.title : event.title}</strong>
-                          <span style={{ fontSize: "11px", color: "#64748b" }}>{new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "#475569" }}>
-                          {isArabic ? event.descriptionAr || event.description : event.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+      {isAdmin && (
+        <section className="charts-grid two">
+          <article className="panel">
+            <div className="panel-head">
+              <div className="inline-actions" style={{ gap: "8px" }}>
+                <span className="agent-icon-badge" style={{ backgroundColor: "#8b5cf6" }}>
+                  <Bot size={16} style={{ color: "#fff" }} />
+                </span>
+                <h3>{tr("AI Operations Log", "سجل عمليات الذكاء الاصطناعي")}</h3>
               </div>
-            )}
-          </div>
-        </article>
-      </section>
+              <span>{tr("Real-time telemetry and automation events from the AI Agent.", "أحداث الأتمتة المباشرة من نظام الذكاء الاصطناعي.")}</span>
+            </div>
+
+            <div className="console-log-wrap" style={{
+              backgroundColor: "#0d0e12",
+              color: "#38bdf8",
+              fontFamily: "monospace",
+              fontSize: "12.5px",
+              padding: "16px",
+              borderRadius: "8px",
+              maxHeight: "350px",
+              overflowY: "auto",
+              border: "1px solid #1e293b",
+              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.6)"
+            }}>
+              {!overview.aiLogs || overview.aiLogs.length === 0 ? (
+                <p style={{ color: "#64748b", margin: 0 }}>{tr("// No AI operations logged in this session.", "// لم يتم تسجيل أي عمليات حالياً.")}</p>
+              ) : (
+                overview.aiLogs.map((log) => (
+                  <div key={log.id} style={{ marginBottom: "8px", borderBottom: "1px dashed #1e293b", paddingBottom: "4px" }}>
+                    <span style={{ color: "#64748b" }}>[{new Date(log.timestamp).toLocaleTimeString()}]</span>{" "}
+                    <span style={{ color: "#a78bfa", fontWeight: "bold" }}>[agent:{log.action}]</span>{" "}
+                    <span style={{ color: "#e2e8f0" }}>{log.details}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel-head">
+              <h3>{tr("Activity Timeline", "الجدول الزمني للنشاط")}</h3>
+              <span>{tr("Chronological log of recent platform transactions and support events.", "سجل الأحداث الأخيرة للمبيعات والطلبات والدعم.")}</span>
+            </div>
+
+            <div className="timeline-wrap" style={{ maxHeight: "350px", overflowY: "auto", paddingRight: "8px" }}>
+              {!overview.timeline || overview.timeline.length === 0 ? (
+                <p className="empty-note">{tr("No recent activity.", "لا توجد نشاطات حديثة.")}</p>
+              ) : (
+                <div className="timeline-container" style={{
+                  position: "relative",
+                  paddingLeft: isArabic ? "0" : "20px",
+                  paddingRight: isArabic ? "20px" : "0",
+                  borderLeft: isArabic ? "none" : "2px solid #e2e8f0",
+                  borderRight: isArabic ? "2px solid #e2e8f0" : "none"
+                }}>
+                  {overview.timeline.map((event) => {
+                    let icon = <Info size={12} />;
+                    let iconBg = "#cbd5e1";
+                    
+                    if (event.type === "order_created") {
+                      icon = <ShoppingCart size={12} style={{ color: "#fff" }} />;
+                      iconBg = "#3b82f6";
+                    } else if (event.type === "order_status") {
+                      icon = <FileCheck size={12} style={{ color: "#fff" }} />;
+                      iconBg = "#10b981";
+                    } else if (event.type === "support_created" || event.type === "support_reply") {
+                      icon = <MessageSquare size={12} style={{ color: "#fff" }} />;
+                      iconBg = "#f59e0b";
+                    } else if (event.type === "sale_created") {
+                      icon = <BadgeDollarSign size={12} style={{ color: "#fff" }} />;
+                      iconBg = "#8b5cf6";
+                    }
+
+                    return (
+                      <div key={event.id} style={{ position: "relative", marginBottom: "16px" }}>
+                        <div style={{
+                          position: "absolute",
+                          left: isArabic ? "unset" : "-29px",
+                          right: isArabic ? "-29px" : "unset",
+                          top: "2px",
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          backgroundColor: iconBg,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 0 0 4px #fff"
+                        }}>
+                          {icon}
+                        </div>
+                        <div style={{ paddingLeft: isArabic ? "0" : "10px", paddingRight: isArabic ? "10px" : "0" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <strong style={{ fontSize: "14px" }}>{isArabic ? event.titleAr || event.title : event.title}</strong>
+                            <span style={{ fontSize: "11px", color: "#64748b" }}>{new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "12.5px", color: "#475569" }}>
+                            {isArabic ? event.descriptionAr || event.description : event.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </article>
+        </section>
+      )}
     </div>
   );
 }

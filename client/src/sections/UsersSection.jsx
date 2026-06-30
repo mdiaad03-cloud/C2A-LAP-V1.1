@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { Pencil, Trash2, Upload, UserPlus, X, Coins, Eye, EyeOff, Landmark, History, Plus } from "lucide-react";
+import { Pencil, Trash2, Upload, UserPlus, X, Coins, Eye, EyeOff, Landmark, History, Wallet, User as UserIcon, PiggyBank } from "lucide-react";
 import { formatDateTime, money } from "../utils/format";
 
 const blank = {
@@ -13,6 +13,7 @@ const blank = {
   cashNumber: "",
   instapayAddress: "",
   canViewOnlineOrders: true,
+  salary: "",
   payoutAmount: "",
   payoutNotes: "",
 };
@@ -56,6 +57,7 @@ function UserAvatar({ name, avatarUrl }) {
 
 export default function UsersSection({
   users,
+  sales = [],
   onCreateUser,
   onUpdateUser,
   onDeleteUser,
@@ -83,6 +85,29 @@ export default function UsersSection({
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  // Calculate financials for a specific user
+  const getUserFinancials = (user) => {
+    const userSales = sales.filter((sale) => sale.createdBy === user.id);
+    const totalCommissions = userSales.reduce((sum, sale) => sum + Number(sale.profit || 0), 0);
+    const baseSalary = Number(user.salary || 0);
+    const totalEarnings = totalCommissions + baseSalary;
+    const totalPaid = (user.payoutHistory || []).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const remainingBalance = totalEarnings - totalPaid;
+    return {
+      totalCommissions,
+      baseSalary,
+      totalEarnings,
+      totalPaid,
+      remainingBalance,
+      salesCount: userSales.length
+    };
+  };
+
+  const selectedUserFinancials = useMemo(() => {
+    if (!selectedUser) return null;
+    return getUserFinancials(selectedUser);
+  }, [selectedUser, sales]);
+
   function startEdit(user) {
     setEditingId(user.id);
     setForm({
@@ -95,6 +120,7 @@ export default function UsersSection({
       cashNumber: user.cashNumber || "",
       instapayAddress: user.instapayAddress || "",
       canViewOnlineOrders: user.canViewOnlineOrders !== false,
+      salary: user.salary || 0,
       payoutAmount: "",
       payoutNotes: "",
     });
@@ -133,22 +159,28 @@ export default function UsersSection({
 
     setSaving(true);
     try {
+      const payload = {
+        name: form.name,
+        role: form.role,
+        avatarUrl: form.avatarUrl,
+        isActive: form.isActive,
+        cashNumber: form.cashNumber,
+        instapayAddress: form.instapayAddress,
+        canViewOnlineOrders: form.canViewOnlineOrders,
+        salary: form.salary ? Number(form.salary) : 0,
+        payoutAmount: form.payoutAmount ? Number(form.payoutAmount) : undefined,
+        payoutNotes: form.payoutNotes,
+        ...(form.password ? { password: form.password } : {}),
+      };
+
       if (editingId) {
-        await onUpdateUser(editingId, {
-          name: form.name,
-          role: form.role,
-          avatarUrl: form.avatarUrl,
-          isActive: form.isActive,
-          cashNumber: form.cashNumber,
-          instapayAddress: form.instapayAddress,
-          canViewOnlineOrders: form.canViewOnlineOrders,
-          payoutAmount: form.payoutAmount ? Number(form.payoutAmount) : undefined,
-          payoutNotes: form.payoutNotes,
-          ...(form.password ? { password: form.password } : {}),
-        });
+        await onUpdateUser(editingId, payload);
         toast.success(tr("User updated.", "تم تحديث المستخدم."));
       } else {
-        await onCreateUser(form);
+        await onCreateUser({
+          ...form,
+          salary: form.salary ? Number(form.salary) : 0,
+        });
         toast.success(tr("User created.", "تم إنشاء المستخدم."));
       }
       setForm(blank);
@@ -210,8 +242,8 @@ export default function UsersSection({
           <h3>{editingId ? tr("Edit User", "تعديل المستخدم") : tr("User Management", "إدارة المستخدمين")}</h3>
           <span>
             {tr(
-              "Create internal accounts, configure permissions, and log payment payouts.",
-              "أنشئ حسابات داخلية، واضبط الصلاحيات، وسجل الحوالات المالية."
+              "Create internal accounts, configure permissions, basic salaries, and log payouts.",
+              "أنشئ حسابات داخلية، واضبط الصلاحيات، والرواتب الأساسية، وسجل الحوالات المالية."
             )}
           </span>
         </div>
@@ -250,6 +282,16 @@ export default function UsersSection({
           </label>
 
           <label>
+            {tr("Basic Salary (EGP)", "المرتب الأساسي (ج.م)")}
+            <input 
+              type="number"
+              min="0"
+              placeholder="0"
+              value={form.salary} 
+              onChange={(event) => update("salary", event.target.value)} 
+            />
+          </label>
+          <label>
             {tr("Vodafone Cash Wallet", "رقم الكاش (فودافون إلخ)")}
             <input 
               placeholder="01xxxxxxxxx"
@@ -257,7 +299,7 @@ export default function UsersSection({
               onChange={(event) => update("cashNumber", event.target.value)} 
             />
           </label>
-          <label>
+          <label className="span-2">
             {tr("InstaPay Address", "عنوان انستا باي")}
             <input 
               placeholder="name@instapay"
@@ -313,7 +355,7 @@ export default function UsersSection({
             <div className="span-2 panel" style={{ border: "1px solid var(--primary)", padding: "1.25rem", marginTop: "1rem" }}>
               <h4 style={{ margin: "0 0 1rem", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Coins size={18} />
-                {tr("Send / Log Payout Transfer", "تسجيل تحويل مالي / عمولة")}
+                {tr("Send / Log Payout Transfer", "تسجيل تحويل مالي / تسوية حساب")}
               </h4>
               <div className="form-grid">
                 <label>
@@ -354,54 +396,83 @@ export default function UsersSection({
         </form>
       </section>
 
-      {/* Selected User Payout History (Show if editing and user has payout records) */}
-      {editingId && selectedUser && (
-        <section className="panel">
-          <div className="panel-head" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <History size={18} style={{ color: "var(--primary)" }} />
-            <h3>{tr("Payout History Ledger", "سجل التحويلات المالية للموظف")}</h3>
+      {/* Selected User Financials and Payout History */}
+      {editingId && selectedUser && selectedUserFinancials && (
+        <section className="panel" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", borderBottom: "1px solid var(--line)", paddingBottom: "0.75rem" }}>
+            <Wallet size={20} style={{ color: "var(--primary)" }} />
+            <h3 style={{ margin: 0 }}>{tr("Financial Statement Summary", "كشف حساب وتسوية الموظف")}</h3>
           </div>
-          <div className="table-wrap" style={{ marginTop: "1rem" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>{tr("Date", "التاريخ")}</th>
-                  <th>{tr("Amount", "المبلغ")}</th>
-                  <th>{tr("Notes", "ملاحظات")}</th>
-                  <th>{tr("Action", "إجراء")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(!selectedUser.payoutHistory || selectedUser.payoutHistory.length === 0) ? (
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            <div className="panel" style={{ padding: "1rem", backgroundColor: "var(--bg-body)", border: "1px solid var(--line)" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{tr("Basic Salary", "المرتب الأساسي")}</span>
+              <h4 style={{ margin: "0.5rem 0 0", fontSize: "1.3rem", color: "var(--text-primary)" }}>{money.format(selectedUserFinancials.baseSalary)}</h4>
+            </div>
+            <div className="panel" style={{ padding: "1rem", backgroundColor: "var(--bg-body)", border: "1px solid var(--line)" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{tr("Commissions Earned", "إجمالي العمولات")}</span>
+              <h4 style={{ margin: "0.5rem 0 0", fontSize: "1.3rem", color: "var(--primary)" }}>{money.format(selectedUserFinancials.totalCommissions)}</h4>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{selectedUserFinancials.salesCount} {tr("Sales records", "عمليات بيع")}</span>
+            </div>
+            <div className="panel" style={{ padding: "1rem", backgroundColor: "var(--bg-body)", border: "1px solid var(--line)" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{tr("Total Paid (Transferred)", "إجمالي ما تم تحويله")}</span>
+              <h4 style={{ margin: "0.5rem 0 0", fontSize: "1.3rem", color: "var(--text-primary)" }}>{money.format(selectedUserFinancials.totalPaid)}</h4>
+            </div>
+            <div className="panel" style={{ padding: "1rem", backgroundColor: "var(--bg-body)", border: "1px solid var(--primary)", boxShadow: "0 0 8px rgba(15,118,110,0.15)" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{tr("Remaining Balance Due", "المتبقي للتحويل له")}</span>
+              <h4 style={{ margin: "0.5rem 0 0", fontSize: "1.4rem", fontWeight: "700", color: selectedUserFinancials.remainingBalance >= 0 ? "#10b981" : "#ef4444" }}>
+                {money.format(selectedUserFinancials.remainingBalance)}
+              </h4>
+            </div>
+          </div>
+
+          <div style={{ marginTop: "1rem" }}>
+            <h4 style={{ margin: "0 0 1rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <History size={16} />
+              {tr("Payout Ledger History", "سجل الدفوعات والتحويلات")}
+            </h4>
+            <div className="table-wrap">
+              <table>
+                <thead>
                   <tr>
-                    <td colSpan={4} style={{ textAlign: "center", color: "var(--text-secondary)" }}>
-                      {tr("No payout records found.", "لا توجد سجلات تحويل مالي.")}
-                    </td>
+                    <th>{tr("Date", "التاريخ")}</th>
+                    <th>{tr("Amount", "المبلغ")}</th>
+                    <th>{tr("Notes", "ملاحظات")}</th>
+                    <th>{tr("Action", "إجراء")}</th>
                   </tr>
-                ) : (
-                  selectedUser.payoutHistory.map((payout) => (
-                    <tr key={payout.id}>
-                      <td>{formatDateTime(payout.createdAt)}</td>
-                      <td style={{ fontWeight: "700", color: "var(--primary)" }}>
-                        {money.format(payout.amount)}
-                      </td>
-                      <td>{payout.notes || "-"}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="secondary-btn danger-outline"
-                          style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
-                          onClick={() => deletePayoutEntry(payout.id)}
-                        >
-                          <Trash2 size={12} />
-                          {tr("Delete", "حذف")}
-                        </button>
+                </thead>
+                <tbody>
+                  {(!selectedUser.payoutHistory || selectedUser.payoutHistory.length === 0) ? (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: "center", color: "var(--text-secondary)" }}>
+                        {tr("No payout records found.", "لا توجد سجلات تحويل مالي.")}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    selectedUser.payoutHistory.map((payout) => (
+                      <tr key={payout.id}>
+                        <td>{formatDateTime(payout.createdAt)}</td>
+                        <td style={{ fontWeight: "700", color: "var(--primary)" }}>
+                          {money.format(payout.amount)}
+                        </td>
+                        <td>{payout.notes || "-"}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="secondary-btn danger-outline"
+                            style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                            onClick={() => deletePayoutEntry(payout.id)}
+                          >
+                            <Trash2 size={12} />
+                            {tr("Delete", "حذف")}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}
@@ -409,7 +480,7 @@ export default function UsersSection({
       <section className="panel table-panel">
         <div className="panel-head">
           <h3>{tr("System Users", "مستخدمو النظام")}</h3>
-          <span>{tr("Delete accounts, review roles, and check latest activity.", "احذف الحسابات، وراجع الأدوار، وتابع آخر نشاط.")}</span>
+          <span>{tr("Delete accounts, review roles, track basic salaries and payout balances.", "احذف الحسابات، وراجع الأدوار، وتابع الرواتب الأساسية ومتبقي التحويلات لكل موظف.")}</span>
         </div>
 
         <div className="table-wrap">
@@ -426,70 +497,102 @@ export default function UsersSection({
               </tr>
             </thead>
             <tbody>
-              {sortedUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <div className="user-cell">
-                      <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />
-                      <div className="user-cell-meta">
-                        <strong>{user.name}</strong>
-                        <span>{user.email || user.username}</span>
-                        {(user.cashNumber || user.instapayAddress) ? (
-                          <span style={{ fontSize: "0.8rem", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem" }}>
-                            {user.cashNumber && (
-                              <span style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
-                                <Coins size={12} />
-                                {user.cashNumber}
+              {sortedUsers.map((user) => {
+                const financials = getUserFinancials(user);
+
+                return (
+                  <tr key={user.id}>
+                    <td>
+                      <div className="user-cell">
+                        <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />
+                        <div className="user-cell-meta">
+                          <strong>{user.name}</strong>
+                          <span>{user.email || user.username}</span>
+                          {(user.cashNumber || user.instapayAddress) ? (
+                            <span style={{ fontSize: "0.8rem", color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem" }}>
+                              {user.cashNumber && (
+                                <span style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
+                                  <Coins size={12} />
+                                  {user.cashNumber}
+                                </span>
+                              )}
+                              {user.cashNumber && user.instapayAddress && <span>•</span>}
+                              {user.instapayAddress && (
+                                <span style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
+                                  <Landmark size={12} />
+                                  {user.instapayAddress}
+                                </span>
+                              )}
+                            </span>
+                          ) : null}
+
+                          {/* Dynamic Financial Overview */}
+                          {user.role === "sales" && (
+                            <div style={{ 
+                              fontSize: "0.8rem", 
+                              marginTop: "0.4rem", 
+                              color: "var(--text-secondary)", 
+                              display: "flex", 
+                              gap: "0.5rem",
+                              alignItems: "center",
+                              backgroundColor: "var(--bg-body)",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              border: "1px dashed var(--line)",
+                              width: "fit-content"
+                            }}>
+                              <span>{tr("Salary:", "المرتب:")} <strong style={{ color: "var(--text-primary)" }}>{money.format(financials.baseSalary)}</strong></span>
+                              <span>•</span>
+                              <span>{tr("Paid:", "المدفوع:")} <strong style={{ color: "var(--text-primary)" }}>{money.format(financials.totalPaid)}</strong></span>
+                              <span>•</span>
+                              <span>
+                                {tr("Due Balance:", "متبقي له:")}{" "}
+                                <strong style={{ color: financials.remainingBalance >= 0 ? "#10b981" : "#ef4444" }}>
+                                  {money.format(financials.remainingBalance)}
+                                </strong>
                               </span>
-                            )}
-                            {user.cashNumber && user.instapayAddress && <span>•</span>}
-                            {user.instapayAddress && (
-                              <span style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
-                                <Landmark size={12} />
-                                {user.instapayAddress}
-                              </span>
-                            )}
-                          </span>
-                        ) : null}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>{user.username}</td>
-                  <td>{roleLabel(user.role, tr)}</td>
-                  <td>{user.isActive ? tr("Active", "نشط") : tr("Disabled", "معطل")}</td>
-                  <td>
-                    {user.canViewOnlineOrders !== false ? (
-                      <span style={{ color: "#10b981", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: "600", fontSize: "0.85rem" }}>
-                        <Eye size={14} />
-                        {tr("Allowed", "مسموح")}
-                      </span>
-                    ) : (
-                      <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: "600", fontSize: "0.85rem" }}>
-                        <EyeOff size={14} />
-                        {tr("Blocked", "محجوب")}
-                      </span>
-                    )}
-                  </td>
-                  <td>{formatDateTime(user.lastLoginAt)}</td>
-                  <td>
-                    <div className="table-actions">
-                      <button type="button" className="secondary-btn" onClick={() => startEdit(user)}>
-                        <Pencil size={14} />
-                        {tr("Edit", "تعديل")}
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-btn danger-outline"
-                        onClick={() => handleDelete(user)}
-                        disabled={deletingId === user.id}
-                      >
-                        <Trash2 size={14} />
-                        {deletingId === user.id ? tr("Deleting...", "جارٍ الحذف...") : tr("Delete", "حذف")}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>{user.username}</td>
+                    <td>{roleLabel(user.role, tr)}</td>
+                    <td>{user.isActive ? tr("Active", "نشط") : tr("Disabled", "معطل")}</td>
+                    <td>
+                      {user.canViewOnlineOrders !== false ? (
+                        <span style={{ color: "#10b981", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: "600", fontSize: "0.85rem" }}>
+                          <Eye size={14} />
+                          {tr("Allowed", "مسموح")}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: "0.25rem", fontWeight: "600", fontSize: "0.85rem" }}>
+                          <EyeOff size={14} />
+                          {tr("Blocked", "محجوب")}
+                        </span>
+                      )}
+                    </td>
+                    <td>{formatDateTime(user.lastLoginAt)}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button type="button" className="secondary-btn" onClick={() => startEdit(user)}>
+                          <Pencil size={14} />
+                          {tr("Edit", "تعديل")}
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-btn danger-outline"
+                          onClick={() => handleDelete(user)}
+                          disabled={deletingId === user.id}
+                        >
+                          <Trash2 size={14} />
+                          {deletingId === user.id ? tr("Deleting...", "جارٍ الحذف...") : tr("Delete", "حذف")}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

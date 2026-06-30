@@ -837,6 +837,7 @@ export default function App() {
             {activeTab === "users" && isAdmin ? (
               <UsersSection
                 users={users}
+                sales={sales}
                 onCreateUser={createUser}
                 onUpdateUser={updateUser}
                 onDeleteUser={deleteUser}

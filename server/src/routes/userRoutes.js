@@ -83,6 +83,7 @@ router.post(
     const cashNumber = asOptionalText(req.body.cashNumber) || "";
     const instapayAddress = asOptionalText(req.body.instapayAddress) || "";
     const canViewOnlineOrders = req.body.canViewOnlineOrders !== false;
+    const salary = req.body.salary !== undefined ? Number(req.body.salary) : 0;
 
     const existing = db.users.find((entry) => entry.username.toLowerCase() === username.toLowerCase());
     if (existing) {
@@ -101,6 +102,7 @@ router.post(
       instapayAddress,
       canViewOnlineOrders,
       payoutHistory: [],
+      salary,
       createdAt: nowIso(),
       updatedAt: nowIso(),
       lastLoginAt: null,
@@ -204,6 +206,10 @@ router.put(
 
     if (req.body.canViewOnlineOrders !== undefined) {
       user.canViewOnlineOrders = Boolean(req.body.canViewOnlineOrders);
+    }
+
+    if (req.body.salary !== undefined) {
+      user.salary = Number(req.body.salary || 0);
     }
 
     // Add a payout to user's history
