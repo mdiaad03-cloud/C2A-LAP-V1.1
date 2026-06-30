@@ -16,9 +16,15 @@ router.get(
   asyncHandler(async (req, res) => {
     const db = await getDb();
     const query = String(req.query.query || "").toLowerCase().trim();
+    const isAdmin = req.user.role === "admin";
 
     const contacts = db.contacts
       .filter((entry) => {
+        // Sales representatives only see contacts they created
+        if (!isAdmin && entry.createdBy && entry.createdBy !== req.user.id) {
+          return false;
+        }
+
         if (!query) {
           return true;
         }
@@ -46,6 +52,7 @@ router.post(
       address: asOptionalText(req.body.address),
       notes: asOptionalText(req.body.notes),
       purchaseHistory: Array.isArray(req.body.purchaseHistory) ? req.body.purchaseHistory : [],
+      createdBy: req.user.id, // Track who created the contact
       createdAt: nowIso(),
       updatedAt: nowIso(),
     };
@@ -75,6 +82,11 @@ router.put(
       return res.status(404).json({ error: "Contact not found." });
     }
 
+    // Restrict editing to owner or admin
+    if (req.user.role !== "admin" && contact.createdBy && contact.createdBy !== req.user.id) {
+      return res.status(403).json({ error: "You can only edit your own contacts." });
+    }
+
     if (req.body.name !== undefined) {
       contact.name = requireText(req.body.name, "Client name");
     }
@@ -89,6 +101,11 @@ router.put(
 
     if (req.body.notes !== undefined) {
       contact.notes = asOptionalText(req.body.notes);
+    }
+
+    // Set createdBy if it was missing (legacy contacts)
+    if (!contact.createdBy) {
+      contact.createdBy = req.user.id;
     }
 
     contact.updatedAt = nowIso();
