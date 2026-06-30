@@ -51,11 +51,10 @@ router.post(
       ip: req.ip,
     });
 
-    try {
-      await sendLoginAlertEmail({ user, ip: req.ip });
-    } catch (mailErr) {
-      console.error("Failed to send login alert email:", mailErr);
-    }
+    // Send login alert in background (non-blocking)
+    sendLoginAlertEmail({ user, ip: req.ip }).catch((mailErr) => {
+      console.error("Failed to send login alert email in background:", mailErr);
+    });
 
     res.json({
       token,
