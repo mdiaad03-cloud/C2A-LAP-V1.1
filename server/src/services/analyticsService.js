@@ -177,10 +177,10 @@ export function buildDashboardCards({ sales, contacts, users, products, role, on
       activeUsers: users.filter((user) => user.isActive).length,
       activeWarrantyCount,
       expiringSoonCount,
+      netProfit: summary.netProfit,
       ...(role === "admin"
         ? {
             totalRevenue: summary.totalRevenue,
-            netProfit: summary.netProfit,
             totalPurchaseCost: summary.totalPurchaseCost,
             totalShippingCost: summary.totalShippingCost,
             totalOnlineOrders: onlineOrders.length,
