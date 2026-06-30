@@ -26,9 +26,13 @@ router.get(
       query: req.query.query,
     });
 
+    const visibleContacts = req.user.role === "admin"
+      ? db.contacts
+      : db.contacts.filter((contact) => contact.createdBy === req.user.id);
+
     const cards = buildDashboardCards({
       sales: filteredSales,
-      contacts: db.contacts,
+      contacts: visibleContacts,
       users: db.users,
       products: db.products,
       onlineOrders: db.onlineOrders,

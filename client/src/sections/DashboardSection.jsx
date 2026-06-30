@@ -132,6 +132,14 @@ export default function DashboardSection({ overview, isAdmin, lang = "en", onOpe
       icon: BadgeDollarSign,
       accent: "orange",
     });
+  } else {
+    cards.unshift({
+      title: tr("My Earnings", "أرباحي وعمولاتي"),
+      value: money.format(Number(kpis.netProfit || 0)),
+      hint: tr("Personal sales commissions", "أرباحك المحققة من العمولات"),
+      icon: BadgeDollarSign,
+      accent: "green",
+    });
   }
 
   return (
