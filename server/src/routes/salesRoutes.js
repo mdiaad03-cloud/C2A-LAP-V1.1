@@ -146,6 +146,7 @@ router.post(
           address: sale.clientAddress || "",
           notes: sale.notes || "",
           purchaseHistory: [],
+          createdBy: req.user.id,
           createdAt: nowIso(),
           updatedAt: nowIso(),
         };
