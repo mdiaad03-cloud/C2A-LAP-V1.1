@@ -271,10 +271,12 @@ export default function App() {
         tasks.push({ key: "sales", request: api.get("/sales", { params }), required: true });
         tasks.push({ key: "contacts", request: api.get("/contacts", { params: { query: contactQuery } }) });
         tasks.push({ key: "shipping", request: api.get("/shipping") });
-        tasks.push({
-          key: "onlineOrders",
-          request: api.get("/online-orders", { params: onlineFilters }),
-        });
+        if (canViewOnlineOrdersTab) {
+          tasks.push({
+            key: "onlineOrders",
+            request: api.get("/online-orders", { params: onlineFilters }),
+          });
+        }
         tasks.push({ key: "users", request: api.get("/users") });
       }
 
