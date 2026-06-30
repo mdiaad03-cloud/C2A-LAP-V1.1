@@ -21,7 +21,7 @@ router.get(
     const contacts = db.contacts
       .filter((entry) => {
         // Sales representatives only see contacts they created
-        if (!isAdmin && entry.createdBy && entry.createdBy !== req.user.id) {
+        if (!isAdmin && entry.createdBy !== req.user.id) {
           return false;
         }
 
