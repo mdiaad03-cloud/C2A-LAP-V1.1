@@ -168,8 +168,6 @@ Use these credentials to log in and test the dashboard locally:
 ## 👨‍💻 Author
 
 **Mohamed Diaa El-Din Samy**
-- 🎓 Badr University in Assiut
-- 🆔 ID: 2024030095 | Section: Z1
 - 📧 [mdiaad03@gmail.com](mailto:mdiaad03@gmail.com)
 - 🐙 GitHub: [@mdiaad03-cloud](https://github.com/mdiaad03-cloud)
 - 💼 LinkedIn: [Mohamed Diaa](https://www.linkedin.com/in/%D9%85%D8%AD%D9%85%D8%AF-%D8%B6%D9%8A%D8%A7%D8%A1-b43a13343)
